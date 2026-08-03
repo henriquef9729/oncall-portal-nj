@@ -2623,18 +2623,56 @@ Delete Selected
   <!-- SCRIPT INTEGRATION -->
   <script>
     /* ==========================================================
-       VERCEL / GOOGLE APPS SCRIPT COMPATIBILITY
+       VERCEL / GOOGLE APPS SCRIPT API ADAPTER
        ----------------------------------------------------------
        On Apps Script, google.script.run is provided by Google.
-       On Vercel, this safe adapter prevents the frontend from
-       crashing and returns neutral fallback values until the
-       external Apps Script API is connected.
+       On Vercel, this adapter sends supported methods to the
+       published Apps Script Web App API.
     ========================================================== */
-    (function installAppsScriptCompatibility() {
+
+    const GAS_API_URL =
+      "https://script.google.com/macros/s/AKfycbxkhSdeuQpBYIEK5_vVNdVWSUpEi6yp7Z_hGJhMr-oziPWAHCGwgbkbBUob2jdqpkXGIg/exec";
+
+    async function callGasApi(action, data = {}) {
+      const response = await fetch(GAS_API_URL, {
+        method: "POST",
+        redirect: "follow",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify({
+          action,
+          ...data
+        })
+      });
+
+      const text = await response.text();
+
+      if (!response.ok) {
+        throw new Error(
+          `Apps Script API error ${response.status}: ${text}`
+        );
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch (_error) {
+        throw new Error(
+          `The Apps Script response was not valid JSON: ${text.slice(0, 300)}`
+        );
+      }
+    }
+
+    (function installAppsScriptApiAdapter() {
       if (window.google?.script?.run) return;
 
+      const apiMethods = new Set([
+        "getCitiesFromSheet",
+        "getDispatchers",
+        "loadEquipmentByCategory"
+      ]);
+
       const fallbackByMethod = {
-        loadEquipmentByCategory: { categories: [], map: {} },
         loadRecentHistory: [],
         getReportsOverview: {
           success: true,
@@ -2651,8 +2689,8 @@ Delete Selected
         },
         getReportDetails: {
           success: false,
-          code: "BACKEND_UNAVAILABLE",
-          message: "The backend is not connected to the Vercel deployment yet."
+          code: "BACKEND_ACTION_NOT_CONNECTED",
+          message: "This backend action has not been connected to the Vercel API yet."
         },
         getReportDashboard: {
           success: true,
@@ -2662,18 +2700,16 @@ Delete Selected
           totalHours: 0
         },
         getTotalHours: 0,
-        getCitiesFromSheet: [],
-        getDispatchers: [],
         exportToPDF: null,
         exportToSheet: {
           success: false,
-          code: "BACKEND_UNAVAILABLE",
-          message: "Spreadsheet export requires the Apps Script backend."
+          code: "BACKEND_ACTION_NOT_CONNECTED",
+          message: "Spreadsheet export has not been connected to the Vercel API yet."
         },
         exportReportToSheet: {
           success: false,
-          code: "BACKEND_UNAVAILABLE",
-          message: "Spreadsheet export requires the Apps Script backend."
+          code: "BACKEND_ACTION_NOT_CONNECTED",
+          message: "Spreadsheet export has not been connected to the Vercel API yet."
         }
       };
 
@@ -2683,8 +2719,57 @@ Delete Selected
         "closeActiveReport",
         "deleteHistory",
         "deleteLastEntry",
+        "deleteSelectedEntries",
         "deleteSelectedHistory"
       ]);
+
+      function mapGasArguments(methodName, args) {
+        switch (methodName) {
+          case "getReportDashboard":
+          case "loadRecentHistory":
+          case "getTotalHours":
+          case "getReportsOverview":
+          case "deleteHistory":
+          case "deleteLastEntry":
+          case "exportToPDF":
+          case "exportToSheet":
+            return { userEmail: args[0] };
+
+          case "getReportDetails":
+          case "exportReportToSheet":
+            return {
+              userEmail: args[0],
+              reportId: args[1]
+            };
+
+          case "startNewReport":
+            return {
+              userEmail: args[0],
+              technician: args[1],
+              startDate: args[2],
+              endDate: args[3]
+            };
+
+          case "closeActiveReport":
+            return {
+              userEmail: args[0],
+              endDate: args[1]
+            };
+
+          case "saveOnCall":
+            return { payload: args[0] };
+
+          case "deleteSelectedEntries":
+          case "deleteSelectedHistory":
+            return {
+              sheetRows: args[0],
+              userEmail: args[1]
+            };
+
+          default:
+            return {};
+        }
+      }
 
       function createRunner() {
         let successHandler = null;
@@ -2708,25 +2793,52 @@ Delete Selected
 
             if (property === "then") return undefined;
 
-            return function () {
+            return function (...args) {
               const methodName = String(property);
-              console.warn(
-                `[Vercel] Apps Script method "${methodName}" was skipped because the backend API is not connected.`
-              );
+
+              if (apiMethods.has(methodName)) {
+                callGasApi(methodName, mapGasArguments(methodName, args))
+                  .then(function (result) {
+                    if (typeof successHandler === "function") {
+                      successHandler(result);
+                    }
+                  })
+                  .catch(function (error) {
+                    console.error(
+                      `[Vercel API] Apps Script method "${methodName}" failed:`,
+                      error
+                    );
+
+                    if (typeof failureHandler === "function") {
+                      failureHandler(error);
+                    }
+                  });
+
+                return runner;
+              }
 
               let result;
 
-              if (Object.prototype.hasOwnProperty.call(fallbackByMethod, methodName)) {
+              if (
+                Object.prototype.hasOwnProperty.call(
+                  fallbackByMethod,
+                  methodName
+                )
+              ) {
                 result = fallbackByMethod[methodName];
               } else if (writeMethods.has(methodName)) {
                 result = {
                   success: false,
-                  code: "BACKEND_UNAVAILABLE",
-                  message: "This action requires the Apps Script backend, which is not connected to Vercel yet."
+                  code: "BACKEND_ACTION_NOT_CONNECTED",
+                  message: "This action has not been connected to the Vercel API yet."
                 };
               } else {
                 result = null;
               }
+
+              console.warn(
+                `[Vercel API] Apps Script method "${methodName}" is not connected yet.`
+              );
 
               window.setTimeout(function () {
                 try {
@@ -2734,7 +2846,11 @@ Delete Selected
                     successHandler(result);
                   }
                 } catch (handlerError) {
-                  console.error("Vercel fallback handler error:", handlerError);
+                  console.error(
+                    "Vercel fallback handler error:",
+                    handlerError
+                  );
+
                   if (typeof failureHandler === "function") {
                     failureHandler(handlerError);
                   }
@@ -2758,46 +2874,12 @@ Delete Selected
       });
 
       window.IS_VERCEL_DEPLOYMENT = true;
-      console.info("Vercel compatibility mode enabled.");
+      console.info("Vercel API mode enabled.");
     })();
+
     let citiesList = [];
     let dispatcherList = [];
     let currentUser = null;
-    const GAS_API_URL =
-  "https://script.google.com/macros/s/AKfycbxkhSdeuQpBYIEK5_vVNdVWSUpEi6yp7Z_hGJhMr-oziPWAHCGwgbkbBUob2jdqpkXGIg/exec";
-
-async function callGasApi(action, data = {}) {
-  const response = await fetch(GAS_API_URL, {
-    method: "POST",
-    redirect: "follow",
-
-    // Use text/plain para evitar bloqueio de preflight/CORS.
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
-
-    body: JSON.stringify({
-      action,
-      ...data
-    })
-  });
-
-  const text = await response.text();
-
-  if (!response.ok) {
-    throw new Error(
-      `Apps Script API error ${response.status}: ${text}`
-    );
-  }
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(
-      `The Apps Script response was not valid JSON: ${text.slice(0, 300)}`
-    );
-  }
-}
     let currentReportDashboard = null;
     let lastClosedReportSnapshot = null;
     let selectedReportId = null;
@@ -5691,37 +5773,29 @@ async function getLocationName(latitude, longitude) {
 
 });
 
-   /* ONLOAD INITIALIZATION */
-window.onload = function () {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
+    /* ONLOAD INITIALIZATION */
+    window.onload = function() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      document.getElementById("date").value = `${year}-${month}-${day}`;
 
-  document.getElementById("date").value =
-    `${year}-${month}-${day}`;
-
-  if (window.google?.script?.run) {
-    loadCategories();
-  }
-
-  setEntryFormEnabled(false);
-
-  if (
-    currentUser?.email &&
-    window.google?.script?.run
-  ) {
-    loadReportDashboard();
-    loadHistoryBox();
-    loadTotalHours();
-    loadReportsCenter();
-  }
-
-  addMarker(170, 120, "Newark", 1);
-  addMarker(165, 170, "Jersey City", 1);
-  addMarker(145, 500, "Trenton", 1);
-  addMarker(185, 310, "Princeton", 1);
-};
+      if (window.google?.script?.run) {
+  loadCategories();
+}
+      setEntryFormEnabled(false);
+      if (currentUser?.email && window.google?.script?.run) {
+  loadReportDashboard();
+  loadHistoryBox();
+  loadTotalHours();
+  loadReportsCenter();
+}
+      addMarker(170,120,"Newark");
+addMarker(165,170,"Jersey City");
+addMarker(145,500,"Trenton");
+addMarker(185,310,"Princeton");
+    };
 
   </script>
 </body>
