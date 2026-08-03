@@ -4246,8 +4246,21 @@ if (
     if (!data.user) {
       throw new Error("User not found.");
     }
-    displayLoggedUser(data.user);
-    hideLogin();
+    currentUser = data.user;
+
+try {
+  displayLoggedUser(data.user);
+} catch (displayError) {
+  console.warn("Unable to load backend data yet:", displayError);
+}
+
+hideLogin();
+
+if (rememberLogin.checked) {
+  localStorage.setItem("onCallLoggedIn", "true");
+} else {
+  sessionStorage.setItem("onCallLoggedIn", "true");
+}
 
   } catch (error) {
     console.error("Login error:", error);
@@ -4578,11 +4591,11 @@ function displayLoggedUser(user) {
 
   document.getElementById("userAvatar").textContent =
     getInitials(fullName, email);
-
-  loadReportDashboard();
-  loadHistoryBox();
-  loadTotalHours();
-  loadReportsCenter();
+//desativado temporariamente
+  //loadReportDashboard();
+  //loadHistoryBox();
+  //loadTotalHours();
+  //loadReportsCenter();
 }
 async function logout() {
   try {
@@ -5512,14 +5525,16 @@ async function getLocationName(latitude, longitude) {
       const day = String(d.getDate()).padStart(2, '0');
       document.getElementById("date").value = `${year}-${month}-${day}`;
 
-      loadCategories();
+      if (window.google?.script?.run) {
+  loadCategories();
+}
       setEntryFormEnabled(false);
-      if (currentUser?.email) {
-        loadReportDashboard();
-        loadHistoryBox();
-        loadTotalHours();
-        loadReportsCenter();
-      }
+      if (currentUser?.email && window.google?.script?.run) {
+  loadReportDashboard();
+  loadHistoryBox();
+  loadTotalHours();
+  loadReportsCenter();
+}
       addMarker(170,120,"Newark");
 addMarker(165,170,"Jersey City");
 addMarker(145,500,"Trenton");
