@@ -2763,6 +2763,41 @@ Delete Selected
     let citiesList = [];
     let dispatcherList = [];
     let currentUser = null;
+    const GAS_API_URL =
+  "https://script.google.com/macros/s/AKfycbxkhSdeuQpBYIEK5_vVNdVWSUpEi6yp7Z_hGJhMr-oziPWAHCGwgbkbBUob2jdqpkXGIg/exec";
+
+async function callGasApi(action, data = {}) {
+  const response = await fetch(GAS_API_URL, {
+    method: "POST",
+    redirect: "follow",
+
+    // Use text/plain para evitar bloqueio de preflight/CORS.
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
+
+    body: JSON.stringify({
+      action,
+      ...data
+    })
+  });
+
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(
+      `Apps Script API error ${response.status}: ${text}`
+    );
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(
+      `The Apps Script response was not valid JSON: ${text.slice(0, 300)}`
+    );
+  }
+}
     let currentReportDashboard = null;
     let lastClosedReportSnapshot = null;
     let selectedReportId = null;
