@@ -4315,7 +4315,9 @@ function downloadExportedFile(result) {
         })
         .deleteSelectedEntries(sheetRows, currentUser?.email || "");
     }
-function addMarker(x, y, city, count) {
+function addMarker(x, y, city, count = 1) {
+  count = Number(count);
+  if (!Number.isFinite(count) || count < 1) count = 1;
   const svg = document.getElementById("cityMarkers");
   const tooltip = document.getElementById("mapTooltip");
   const namespace = "http://www.w3.org/2000/svg";
@@ -5791,10 +5793,10 @@ async function getLocationName(latitude, longitude) {
   loadTotalHours();
   loadReportsCenter();
 }
-      addMarker(170,120,"Newark");
-addMarker(165,170,"Jersey City");
-addMarker(145,500,"Trenton");
-addMarker(185,310,"Princeton");
+      addMarker(170, 120, "Newark", 1);
+addMarker(165, 170, "Jersey City", 1);
+addMarker(145, 500, "Trenton", 1);
+addMarker(185, 310, "Princeton", 1);
     };
 
   </script>
