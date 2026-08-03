@@ -2622,6 +2622,144 @@ Delete Selected
 
   <!-- SCRIPT INTEGRATION -->
   <script>
+    /* ==========================================================
+       VERCEL / GOOGLE APPS SCRIPT COMPATIBILITY
+       ----------------------------------------------------------
+       On Apps Script, google.script.run is provided by Google.
+       On Vercel, this safe adapter prevents the frontend from
+       crashing and returns neutral fallback values until the
+       external Apps Script API is connected.
+    ========================================================== */
+    (function installAppsScriptCompatibility() {
+      if (window.google?.script?.run) return;
+
+      const fallbackByMethod = {
+        loadEquipmentByCategory: { categories: [], map: {} },
+        loadRecentHistory: [],
+        getReportsOverview: {
+          success: true,
+          reports: [],
+          analytics: {
+            totalReports: 0,
+            totalDeliveries: 0,
+            totalHours: 0,
+            averageHoursPerReport: 0,
+            topCities: [],
+            topEquipment: [],
+            topDispatchers: []
+          }
+        },
+        getReportDetails: {
+          success: false,
+          code: "BACKEND_UNAVAILABLE",
+          message: "The backend is not connected to the Vercel deployment yet."
+        },
+        getReportDashboard: {
+          success: true,
+          state: "OFF_CALL",
+          activeReport: null,
+          lastReport: null,
+          totalHours: 0
+        },
+        getTotalHours: 0,
+        getCitiesFromSheet: [],
+        getDispatchers: [],
+        exportToPDF: null,
+        exportToSheet: {
+          success: false,
+          code: "BACKEND_UNAVAILABLE",
+          message: "Spreadsheet export requires the Apps Script backend."
+        },
+        exportReportToSheet: {
+          success: false,
+          code: "BACKEND_UNAVAILABLE",
+          message: "Spreadsheet export requires the Apps Script backend."
+        }
+      };
+
+      const writeMethods = new Set([
+        "saveOnCall",
+        "startNewReport",
+        "closeActiveReport",
+        "deleteHistory",
+        "deleteLastEntry",
+        "deleteSelectedHistory"
+      ]);
+
+      function createRunner() {
+        let successHandler = null;
+        let failureHandler = null;
+
+        const runner = new Proxy({}, {
+          get(_target, property) {
+            if (property === "withSuccessHandler") {
+              return function (handler) {
+                successHandler = handler;
+                return runner;
+              };
+            }
+
+            if (property === "withFailureHandler") {
+              return function (handler) {
+                failureHandler = handler;
+                return runner;
+              };
+            }
+
+            if (property === "then") return undefined;
+
+            return function () {
+              const methodName = String(property);
+              console.warn(
+                `[Vercel] Apps Script method "${methodName}" was skipped because the backend API is not connected.`
+              );
+
+              let result;
+
+              if (Object.prototype.hasOwnProperty.call(fallbackByMethod, methodName)) {
+                result = fallbackByMethod[methodName];
+              } else if (writeMethods.has(methodName)) {
+                result = {
+                  success: false,
+                  code: "BACKEND_UNAVAILABLE",
+                  message: "This action requires the Apps Script backend, which is not connected to Vercel yet."
+                };
+              } else {
+                result = null;
+              }
+
+              window.setTimeout(function () {
+                try {
+                  if (typeof successHandler === "function") {
+                    successHandler(result);
+                  }
+                } catch (handlerError) {
+                  console.error("Vercel fallback handler error:", handlerError);
+                  if (typeof failureHandler === "function") {
+                    failureHandler(handlerError);
+                  }
+                }
+              }, 0);
+
+              return runner;
+            };
+          }
+        });
+
+        return runner;
+      }
+
+      window.google = window.google || {};
+      window.google.script = window.google.script || {};
+
+      Object.defineProperty(window.google.script, "run", {
+        configurable: true,
+        get: createRunner
+      });
+
+      window.IS_VERCEL_DEPLOYMENT = true;
+      console.info("Vercel compatibility mode enabled.");
+    })();
     let citiesList = [];
     let dispatcherList = [];
     let currentUser = null;
@@ -3884,24 +4022,13 @@ function downloadExportedFile(result) {
 }
 
     /* AUTOCOMPLETE (CITIES & DISPATCHERS) */
-   if (window.google?.script?.run) {
-
-  google.script.run.withSuccessHandler(function(data) {
+    google.script.run.withSuccessHandler(function(data) {
       citiesList = data || [];
-  }).getCitiesFromSheet();
+    }).getCitiesFromSheet();
 
-  google.script.run.withSuccessHandler(function(data) {
+    google.script.run.withSuccessHandler(function(data) {
       dispatcherList = data || [];
-  }).getDispatchers();
-
-} else {
-
-  console.log("Running on Vercel - skipping Apps Script initialization");
-
-  citiesList = [];
-  dispatcherList = [];
-
-}
+    }).getDispatchers();
 
     function filterCities(text) {
       const box = document.getElementById("citySuggestions");
@@ -4288,7 +4415,7 @@ if (rememberLogin.checked) {
   }
 }
 });
-    
+
 async function restoreLoggedUser() {
   try {
     const {
@@ -4302,6 +4429,7 @@ async function restoreLoggedUser() {
     }
 
     if (session?.user) {
+      currentUser = session.user;
       displayLoggedUser(session.user);
       hideLogin();
     }
