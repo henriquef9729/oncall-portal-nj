@@ -3884,13 +3884,24 @@ function downloadExportedFile(result) {
 }
 
     /* AUTOCOMPLETE (CITIES & DISPATCHERS) */
-    google.script.run.withSuccessHandler(function(data) {
-      citiesList = data || [];
-    }).getCitiesFromSheet();
+   if (window.google?.script?.run) {
 
-    google.script.run.withSuccessHandler(function(data) {
+  google.script.run.withSuccessHandler(function(data) {
+      citiesList = data || [];
+  }).getCitiesFromSheet();
+
+  google.script.run.withSuccessHandler(function(data) {
       dispatcherList = data || [];
-    }).getDispatchers();
+  }).getDispatchers();
+
+} else {
+
+  console.log("Running on Vercel - skipping Apps Script initialization");
+
+  citiesList = [];
+  dispatcherList = [];
+
+}
 
     function filterCities(text) {
       const box = document.getElementById("citySuggestions");
