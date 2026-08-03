@@ -1,0 +1,5531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On-Call Portal NJ - NextGen</title>
+
+  <!-- Google Fonts & OCR Tesseract -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  
+  <base target="_top">
+
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --card-bg: rgba(22, 31, 49, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-blue: #3b82f6;
+      --accent-blue-hover: #2563eb;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --input-bg: rgba(15, 23, 42, 0.6);
+      --input-border: rgba(255, 255, 255, 0.12);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px;
+      padding-bottom: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* ===========================
+   LOGIN SCREEN
+=========================== */
+
+#loginScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background:
+    radial-gradient(
+      circle at 15% 15%,
+      rgba(59, 130, 246, 0.22),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 85% 85%,
+      rgba(6, 182, 212, 0.15),
+      transparent 42%
+    ),
+    #0b0f19;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+
+  padding: 38px;
+
+  background: rgba(22, 31, 49, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+
+  backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 30px 70px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+
+.login-logo {
+  width: 58px;
+  height: 58px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 16px;
+
+  background: linear-gradient(
+    135deg,
+    var(--accent-blue),
+    var(--accent-cyan)
+  );
+
+  color: white;
+  font-size: 24px;
+  font-weight: 800;
+
+  box-shadow: 0 10px 28px rgba(59, 130, 246, 0.4);
+}
+
+.login-heading {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-heading h1 {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.login-heading p {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.login-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.login-input-group label {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.login-input-group input {
+  width: 100%;
+
+  padding: 13px 14px;
+
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 11px;
+
+  color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.login-input-group input:focus {
+  border-color: var(--accent-blue);
+
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.remember-row input {
+  accent-color: var(--accent-blue);
+}
+
+.login-button {
+  width: 100%;
+
+  padding: 14px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,
+    var(--accent-blue),
+    var(--accent-blue-hover)
+  );
+
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.32);
+
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.login-button:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 14px 30px rgba(59, 130, 246, 0.4);
+}
+
+#loginMessage {
+  min-height: 18px;
+  text-align: center;
+  color: var(--accent-red);
+  font-size: 13px;
+}
+
+.login-footer {
+  margin-top: 24px;
+
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+    /* HEADER */
+    header {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding: 16px 24px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    }
+
+    .brand-title h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-title p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent-green);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    #loginScreen {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.4s ease,
+    visibility 0.4s ease;
+}
+
+#loginScreen.login-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.login-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.register-link {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--accent-cyan);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.register-link:hover {
+  color: #67e8f9;
+  text-decoration: underline;
+}
+
+#registerMessage {
+  min-height: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--accent-red);
+}
+
+#registerMessage.success {
+  color: var(--accent-green);
+}
+    /* METRICS */
+    .metrics-grid {
+      width: 100%;
+      max-width: 1200px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      padding: 20px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .metric-info p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .metric-info h2 {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .metric-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    /* MAIN CONTAINER */
+    .main-container {
+      width: 100%;
+      max-width: 1200px;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* OCR DROPZONE */
+    .ocr-dropzone {
+      border: 2px dashed rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.04);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    .ocr-dropzone:hover {
+      border-color: var(--accent-blue);
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .ocr-dropzone p {
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-top: 6px;
+    }
+
+    .ocr-dropzone span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* FORM STYLES */
+    form {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      width: 100%;
+    }
+
+    .full-width {
+      grid-column: span 2;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .input-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .input-group input, 
+    .input-group select {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .input-group input:focus, 
+    .input-group select:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .input-group select option {
+      background: #0f172a;
+      color: #fff;
+    }
+
+    /* SUGGESTIONS BOX */
+    .suggestions-box {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #0f172a;
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
+      max-height: 160px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      margin-top: 4px;
+    }
+
+    .suggestion-item {
+      padding: 10px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-main);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .suggestion-item:hover {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-submit {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-hover));
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(59, 130, 246, 0.4);
+    }
+
+    /* HISTORY & FEED */
+    .history-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-danger {
+      color: var(--accent-red);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-top: 15px;
+    }
+
+    .feed-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .feed-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .feed-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    .feed-item {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    .feed-item:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .feed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .feed-patient {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .feed-badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .feed-details {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .feed-details strong {
+      color: var(--text-main);
+    }
+
+    /* TOAST NOTIFICATION */
+    #toast {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: var(--accent-blue);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      font-size: 14px;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 9999;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ANIMATED VAN */
+
+.van-track {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+
+  width: 100%;
+  height: 50px;
+
+  pointer-events: none;
+  z-index: 9998;
+}
+
+.van-mini {
+  position: absolute;
+  bottom: 8px;
+  left: -120px;
+
+  width: 90px;
+  height: 32px;
+
+  background: #ffffff;
+  border-radius: 6px 12px 2px 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+ 
+
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 9999;
+
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.van-mini .cross {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+
+  width: 14px;
+  height: 14px;
+
+  background: #ef4444;
+
+  clip-path: polygon(
+    33% 0%,
+    66% 0%,
+    66% 33%,
+    100% 33%,
+    100% 66%,
+    66% 66%,
+    66% 100%,
+    33% 100%,
+    33% 66%,
+    0% 66%,
+    0% 33%,
+    33% 33%
+  );
+}
+
+.van-mini .window {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+
+  width: 22px;
+  height: 12px;
+
+  background: #0284c7;
+  border-radius: 2px 6px 1px 1px;
+}
+
+.van-mini .wheel {
+  position: absolute;
+  bottom: -4px;
+
+  width: 14px;
+  height: 14px;
+
+  background: #1e293b;
+  border: 2px solid #94a3b8;
+  border-radius: 50%;
+}
+
+.van-mini .wheel-1 {
+  left: 12px;
+}
+
+.van-mini .wheel-2 {
+  right: 12px;
+}
+/* ===========================
+   NEW JERSEY MAP PANEL
+=========================== */
+
+#mapPanel{
+    width:100%;
+    max-width:1200px;
+    margin-bottom:24px;
+
+    background: rgba(22,31,49,.75);
+    border:1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(14px);
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 20px 45px rgba(0,0,0,.30),
+        inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+#njMapContainer{
+
+    position:relative;
+
+    width:100%;
+    height:450px;
+
+    border-radius:16px;
+
+    background:
+        radial-gradient(circle at top left,
+            rgba(59,130,246,.20),
+            transparent 45%),
+
+        radial-gradient(circle at bottom right,
+            rgba(6,182,212,.15),
+            transparent 40%),
+
+        linear-gradient(
+            135deg,
+            #101827,
+            #0f172a 60%,
+            #131f33
+        );
+
+    border:1px solid rgba(255,255,255,.05);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    overflow:hidden;
+}
+
+/* brilho superior */
+
+#njMapContainer::before{
+
+    content:"";
+
+    position:absolute;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:1px;
+
+    background:linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.25),
+        transparent
+    );
+
+}
+
+/* brilho decorativo */
+
+#njMapContainer::after{
+
+    content:"";
+
+    position:absolute;
+
+    width:340px;
+    height:340px;
+
+    border-radius:50%;
+
+    background:rgba(59,130,246,.08);
+
+    filter:blur(70px);
+
+    right:-80px;
+    bottom:-120px;
+
+    pointer-events:none;
+}
+#njMap {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+
+#njState {
+  opacity: 0.9;
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(20%)
+    sepia(28%)
+    saturate(1650%)
+    hue-rotate(171deg)
+    brightness(90%);
+}
+
+#cityMarkers {
+  position: relative;
+}
+#njState:hover{
+
+    fill:#204c7a;
+
+}
+#njState {
+    fill: #222;
+    stroke: #111;
+    stroke-width: 2;
+}
+.map-marker {
+  cursor: pointer;
+}
+
+.marker-circle {
+  fill: #ef4444;
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 4px 8px rgba(239, 68, 68, 0.55));
+  transition: transform 0.2s ease, fill 0.2s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.map-marker:hover .marker-circle {
+  fill: #f87171;
+  transform: scale(1.25);
+}
+
+.marker-pulse {
+  fill: rgba(239, 68, 68, 0.25);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mapMarkerPulse 2s infinite;
+}
+
+.marker-count {
+  fill: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes mapMarkerPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+
+  70% {
+    transform: scale(2);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+#mapTooltip{
+
+    position:absolute;
+
+    display:none;
+
+    padding:8px 12px;
+
+    background:#111827;
+
+    border:1px solid rgba(255,255,255,.12);
+
+    color:white;
+
+    border-radius:8px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    pointer-events:none;
+
+    z-index:9999;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.45);
+
+    transform:translate(-50%,-140%);
+}
+
+.hours-visibility {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hours-toggle {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 17px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.hours-toggle:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+#totalHoursBox.hours-hidden {
+  filter: blur(7px);
+  user-select: none;
+}
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding: 8px 12px;
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 11px;
+
+  background: linear-gradient(
+    135deg,
+    var(--accent-blue),
+    var(--accent-cyan)
+  );
+
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+
+  box-shadow: 0 5px 14px rgba(59, 130, 246, 0.25);
+}
+
+.user-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.user-greeting {
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.user-email {
+  max-width: 230px;
+
+  color: var(--text-muted);
+  font-size: 11px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-profile .status-dot {
+  margin-left: 3px;
+}
+
+@media (max-width: 650px) {
+  .user-email {
+    max-width: 130px;
+  }
+
+  .user-profile .status-dot {
+    display: none;
+  }
+}
+.weather-card {
+  padding: 60px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(59, 130, 246, 0.13),
+    rgba(6, 182, 212, 0.06)
+  );
+
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+
+  box-shadow: var(--card-shadow);
+}
+
+.weather-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weather-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.weather-location {
+  margin-top: 4px;
+
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.weather-refresh-button {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+
+  font-size: 20px;
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.weather-refresh-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  transform: rotate(20deg);
+}
+
+.weather-refresh-button.is-loading {
+  animation: weatherSpin 0.9s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes weatherSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  margin-top: 20px;
+  margin-bottom: 18px;
+}
+
+.weather-icon {
+  width: 62px;
+  height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+
+  font-size: 34px;
+}
+
+.weather-temperature {
+  color: var(--text-main);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.weather-description {
+  margin-top: 6px;
+
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.weather-details {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.weather-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding: 10px;
+
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--card-border);
+  border-radius: 11px;
+}
+
+.weather-detail span {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.weather-detail strong {
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.weather-message {
+  display: none;
+
+  margin-top: 12px;
+  padding: 10px 12px;
+
+  border-radius: 10px;
+
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.weather-message.is-visible {
+  display: block;
+}
+
+.weather-attribution {
+  margin-top: 12px;
+
+  color: var(--text-muted);
+  font-size: 9px;
+  text-align: right;
+  opacity: 0.65;
+}
+
+@media (max-width: 700px) {
+  .weather-details {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+  
+/* ===========================
+   REPORT OPERATIONS
+=========================== */
+.report-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.report-card::after {
+  content: "";
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  right: -55px;
+  bottom: -75px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.08);
+  filter: blur(4px);
+}
+
+.report-card.is-active {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.13), var(--card-bg));
+}
+
+.report-card.is-inactive {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.09), var(--card-bg));
+}
+
+.report-status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.report-state-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.55);
+}
+
+.report-card.is-active .report-state-dot {
+  background: var(--accent-green);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+}
+
+.report-meta {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-top: 5px;
+  max-width: 205px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-card-button {
+  position: relative;
+  z-index: 2;
+  padding: 9px 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  color: white;
+  background: rgba(255,255,255,.06);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.report-card.is-active .report-card-button {
+  color: #fecaca;
+  border-color: rgba(239,68,68,.25);
+}
+
+.report-card.is-inactive .report-card-button {
+  color: #a7f3d0;
+  border-color: rgba(16,185,129,.28);
+}
+
+.entry-panel {
+  position: relative;
+}
+
+.entry-lock {
+  display: none;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid rgba(239, 68, 68, .25);
+  border-radius: 14px;
+  background: rgba(239, 68, 68, .07);
+  text-align: center;
+}
+
+.entry-lock.is-visible {
+  display: block;
+}
+
+.entry-lock-icon {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.entry-lock h3 {
+  font-size: 15px;
+  margin-bottom: 5px;
+}
+
+.entry-lock p {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  margin-bottom: 13px;
+}
+
+.entry-lock button {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 15px;
+  background: linear-gradient(135deg, var(--accent-green), #059669);
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.form-disabled {
+  opacity: .38;
+  filter: grayscale(.2);
+  pointer-events: none;
+  user-select: none;
+}
+
+.btn-submit:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.app-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 30000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(2, 6, 23, .82);
+  backdrop-filter: blur(9px);
+}
+
+.app-modal.is-open {
+  display: flex;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 28px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: #111827;
+  box-shadow: 0 30px 80px rgba(0,0,0,.55);
+}
+
+.modal-icon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  border-radius: 15px;
+  background: rgba(59,130,246,.14);
+  font-size: 23px;
+}
+
+.modal-card.danger .modal-icon {
+  background: rgba(239,68,68,.13);
+}
+
+.modal-card.success .modal-icon {
+  background: rgba(16,185,129,.13);
+}
+
+.modal-card h2 {
+  font-size: 20px;
+  margin-bottom: 9px;
+}
+
+.modal-card > p {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.modal-summary {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 13px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+}
+
+.modal-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+.modal-summary-row:last-child {
+  border-bottom: none;
+}
+
+.modal-summary-row strong {
+  color: var(--text-main);
+  text-align: right;
+}
+
+.modal-warning-list {
+  margin: 16px 0 0 18px;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.modal-warning-final {
+  margin-top: 15px;
+  color: #fecaca !important;
+  font-weight: 800;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.modal-button {
+  padding: 11px 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05);
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.modal-button.primary {
+  border: none;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-hover));
+}
+
+.modal-button.success {
+  border: none;
+  background: linear-gradient(135deg, var(--accent-green), #059669);
+}
+
+.modal-button.danger {
+  border: none;
+  background: linear-gradient(135deg, var(--accent-red), #dc2626);
+}
+
+.modal-button:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+
+@media (max-width: 620px) {
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+  .modal-button {
+    width: 100%;
+  }
+}
+
+
+/* ===========================
+   REPORT CENTER
+=========================== */
+.report-center-section {
+  width: min(1320px, calc(100% - 40px));
+  margin: 0 auto 42px;
+}
+
+.report-center-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.report-center-title h2 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.report-center-title p {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.report-center-button {
+  padding: 11px 15px;
+  border: 1px solid rgba(59,130,246,.28);
+  border-radius: 11px;
+  background: rgba(59,130,246,.09);
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.analytics-card {
+  padding: 17px;
+  border: 1px solid var(--card-border);
+  border-radius: 15px;
+  background: var(--card-bg);
+}
+
+.analytics-card span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.analytics-card strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 22px;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.insight-card {
+  padding: 18px;
+  border: 1px solid var(--card-border);
+  border-radius: 15px;
+  background: var(--card-bg);
+}
+
+.insight-card h3 {
+  margin-bottom: 13px;
+  font-size: 13px;
+}
+
+.insight-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  font-size: 12px;
+}
+
+.insight-row:last-child {
+  border-bottom: none;
+}
+
+.insight-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insight-row strong {
+  color: var(--accent-cyan);
+}
+
+.reports-list {
+  display: grid;
+  gap: 12px;
+}
+
+.report-list-card {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, .7fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  background: var(--card-bg);
+}
+
+.report-list-primary strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.report-list-primary span,
+.report-list-stat span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.report-list-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(148,163,184,.09);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.report-list-status.active {
+  color: #a7f3d0;
+  background: rgba(16,185,129,.12);
+}
+
+.report-list-stat strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.report-open-button {
+  padding: 9px 12px;
+  border: 1px solid rgba(59,130,246,.28);
+  border-radius: 10px;
+  background: rgba(59,130,246,.1);
+  color: #bfdbfe;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.report-detail-modal .modal-card {
+  max-width: 850px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.report-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.report-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.report-detail-summary div {
+  padding: 13px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.04);
+}
+
+.report-detail-summary span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+
+.report-detail-summary strong {
+  font-size: 14px;
+}
+
+.report-entry-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.report-entry-card {
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+}
+
+.report-entry-top,
+.report-entry-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.report-entry-top strong {
+  font-size: 13px;
+}
+
+.report-entry-top span,
+.report-entry-bottom {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.report-entry-bottom {
+  margin-top: 8px;
+}
+
+.empty-reports {
+  padding: 35px 20px;
+  border: 1px dashed rgba(148,163,184,.22);
+  border-radius: 15px;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .analytics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+  .report-list-card {
+    grid-template-columns: 1fr 1fr;
+  }
+  .report-open-button {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .report-center-section {
+    width: min(100% - 24px, 1320px);
+  }
+  .report-center-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .analytics-grid,
+  .report-detail-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+  .report-list-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.logout-btn{
+    position:absolute;
+    top:18px;
+    right:18px;
+
+    width:42px;
+    height:42px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    background:rgba(255,255,255,.04);
+    backdrop-filter:blur(10px);
+
+    color:#fff;
+
+    cursor:pointer;
+    transition:.25s;
+}
+
+.logout-btn:hover{
+    background:#ef4444;
+    border-color:#ef4444;
+    transform:rotate(-8deg) scale(1.08);
+}
+
+.logout-btn svg{
+    width:20px;
+    height:20px;
+}
+.van-mini {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.siren {
+  position: absolute;
+  top: -6px;
+  width: 11px;
+  height: 6px;
+  border-radius: 3px 3px 1px 1px;
+  background: #475569;
+  transition: 0.15s;
+}
+
+.siren-red {
+  left: 34px;
+}
+
+.siren-blue {
+  left: 47px;
+}
+
+.van-mini.siren-on .siren-red {
+  animation: vanRedSiren 0.35s infinite alternate;
+}
+
+.van-mini.siren-on .siren-blue {
+  animation: vanBlueSiren 0.35s infinite alternate-reverse;
+}
+
+@keyframes vanRedSiren {
+  from {
+    background: #450a0a;
+    box-shadow: none;
+  }
+
+  to {
+    background: #ef4444;
+    box-shadow:
+      0 0 8px #ef4444,
+      0 0 16px rgba(239, 68, 68, 0.9);
+  }
+}
+
+@keyframes vanBlueSiren {
+  from {
+    background: #082f49;
+    box-shadow: none;
+  }
+
+  to {
+    background: #38bdf8;
+    box-shadow:
+      0 0 8px #38bdf8,
+      0 0 16px rgba(56, 189, 248, 0.9);
+  }
+}
+.van-mini.siren-on {
+  animation-duration: 4s;
+}
+.van-mini {
+  transition: transform .3s ease;
+}
+
+.van-mini.siren-on {
+  transform: scale(1.02);
+}
+</style>
+</head>
+<body>
+  <div id="loginScreen">
+
+  <!-- CARD DE LOGIN -->
+  <div class="login-card" id="loginCard">
+
+    <div class="login-logo">NJ</div>
+
+    <div class="login-heading">
+      <h1>On-Call Portal</h1>
+      <p>Oxygen & Medical Logistics</p>
+    </div>
+
+    <div class="login-form">
+
+      <div class="login-input-group">
+        <label for="loginEmail">Email</label>
+        <input
+          type="email"
+          id="loginEmail"
+          placeholder="Enter your email"
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="login-input-group">
+        <label for="loginPassword">Password</label>
+
+        <div class="password-wrapper">
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+          >
+
+          <button
+            type="button"
+            id="togglePassword"
+            class="password-toggle"
+            aria-label="Show password"
+          >
+            👁
+          </button>
+        </div>
+      </div>
+
+      <label class="remember-row">
+        <input type="checkbox" id="rememberLogin">
+        <span>Remember me</span>
+      </label>
+
+      <button
+        type="button"
+        id="loginButton"
+        class="login-button"
+      >
+        Sign In
+      </button>
+
+      <button
+        type="button"
+        id="showRegisterButton"
+        class="register-link"
+      >
+        Create account
+      </button>
+
+      <p id="loginMessage"></p>
+
+    </div>
+
+    <p class="login-footer">
+      Powered by TBH Medical Services
+    </p>
+
+  </div>
+
+
+  <!-- CARD DE CADASTRO -->
+  <div
+    class="login-card"
+    id="registerCard"
+    style="display:none;"
+  >
+
+    <div class="login-logo">NJ</div>
+
+    <div class="login-heading">
+      <h1>Create Account</h1>
+      <p>Register for the On-Call Portal</p>
+    </div>
+
+    <div class="login-form">
+
+      <div class="login-input-group">
+        <label for="registerName">Full Name</label>
+        <input
+          type="text"
+          id="registerName"
+          placeholder="Your full name"
+          autocomplete="name"
+        >
+      </div>
+
+      <div class="login-input-group">
+        <label for="registerEmail">Email</label>
+        <input
+          type="email"
+          id="registerEmail"
+          placeholder="your@email.com"
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="login-input-group">
+        <label for="registerPassword">Password</label>
+        <input
+          type="password"
+          id="registerPassword"
+          placeholder="Minimum 6 characters"
+          autocomplete="new-password"
+        >
+      </div>
+
+      <div class="login-input-group">
+        <label for="registerPasswordConfirm">
+          Confirm Password
+        </label>
+
+        <input
+          type="password"
+          id="registerPasswordConfirm"
+          placeholder="Repeat your password"
+          autocomplete="new-password"
+        >
+      </div>
+
+      <button
+        type="button"
+        id="registerButton"
+        class="login-button"
+      >
+        Create Account
+      </button>
+
+      <button
+        type="button"
+        id="backToLoginButton"
+        class="register-link"
+      >
+        Back to sign in
+      </button>
+
+      <p id="registerMessage"></p>
+
+    </div>
+
+  </div>
+
+</div>
+  <!-- HEADER -->
+  <header>
+    
+    <div class="brand">
+      <div class="brand-logo">NJ</div>
+      <div class="brand-title">
+        <h1>On-Call Portal</h1>
+        <p>Oxygen & Medical Logistics</p>
+      </div>
+    </div>
+    <div class="user-profile">
+  <div class="user-avatar" id="userAvatar">U</div>
+
+  <div class="user-profile-info">
+    <div class="user-greeting" id="userGreeting">
+      Welcome
+    </div>
+
+    <div class="user-email" id="userEmail">
+      Loading user...
+    </div>
+  </div>
+
+  <span class="status-dot"></span>
+</div>
+  </header>
+
+<button class="logout-btn" onclick="logout()" title="Logout">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+
+        <path stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H9m4 8H7a2 2 0 01-2-2V6a2 2 0 012-2h6"/>
+    </svg>
+</button>
+  <!-- METRICS CARDS -->
+  
+<section class="metrics-grid">
+    <div class="metric-card report-card is-inactive" id="reportStatusCard">
+      <div class="metric-info">
+        <p>Report Status</p>
+        <div class="report-status-line">
+          <span class="report-state-dot"></span>
+          <h2 id="reportStateText">OFF-CALL</h2>
+        </div>
+        <div class="report-meta" id="reportMetaText">No active report</div>
+      </div>
+      <button type="button" class="report-card-button" id="reportActionButton" onclick="handleReportAction()">
+        Start Report
+      </button>
+    </div>
+    <div class="metric-card">
+      <div class="metric-info">
+        <p>Total Shift Hours</p>
+        <div class="hours-visibility">
+  <h2 id="totalHoursBox">0h 0min</h2>
+
+  <button
+    type="button"
+    id="toggleHoursButton"
+    class="hours-toggle"
+    aria-label="Hide total hours"
+    title="Hide total hours"
+  >
+    👁
+  </button>
+</div>
+      </div>
+      <div class="metric-icon">⏱️</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-info">
+        <p>Today's Deliveries</p>
+        <h2 id="totalDeliveriesBox">0 Orders</h2>
+      </div>
+      <div class="metric-icon">📦</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-info">
+        <p>Active Location</p>
+        <h2 id="activeLocationBox">New Jersey</h2>
+      </div>
+      <div class="metric-icon">📍</div>
+    </div>
+  </section>
+
+</div>
+<section class="panel-card" id="mapPanel">
+
+  <div class="panel-title">
+      <span>New Jersey Coverage Map</span>
+  </div>
+
+  <div id="njMapContainer">
+
+<svg
+id="njMap"
+viewBox="0 0 300 700"
+preserveAspectRatio="xMidYMid meet">
+<image
+  id="njState"
+  href="https://upload.wikimedia.org/wikipedia/commons/e/e3/New_Jersey_Outline_map.svg"
+  x="-15"
+  y="-95"
+  width="270"
+  height="670"
+  preserveAspectRatio="xMidYMid meet"
+/>
+
+<g id="cityMarkers"></g>
+
+</svg>
+
+</div>
+<div id="mapTooltip"></div>
+</section>
+
+<!-- CARD DE WEATHER TEMPO -->
+<div class="weather-card" id="weatherCard">
+
+  <div class="weather-card-header">
+    <div>
+      <span class="weather-label">CURRENT WEATHER</span>
+      <div class="weather-location" id="weatherLocation">
+        Getting location...
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="weather-refresh-button"
+      id="weatherRefreshButton"
+      title="Refresh weather"
+      aria-label="Refresh weather"
+    >
+      ↻
+    </button>
+  </div>
+ 
+  <div class="weather-main">
+    <div class="weather-icon" id="weatherIcon">🌤️</div>
+
+    <div>
+      <div class="weather-temperature" id="weatherTemperature">
+        --°F
+      </div>
+
+      <div class="weather-description" id="weatherDescription">
+        Loading weather...
+      </div>
+    </div>
+  </div>
+
+  <div class="weather-details">
+    <div class="weather-detail">
+      <span>Feels like</span>
+      <strong id="weatherFeelsLike">--°F</strong>
+    </div>
+
+    <div class="weather-detail">
+      <span>Rain</span>
+      <strong id="weatherRain">--%</strong>
+    </div>
+
+    <div class="weather-detail">
+      <span>Humidity</span>
+      <strong id="weatherHumidity">--%</strong>
+    </div>
+
+    <div class="weather-detail">
+      <span>Wind</span>
+      <strong id="weatherWind">-- mph</strong>
+    </div>
+  </div>
+
+  <div class="weather-message" id="weatherMessage"></div>
+
+  <div class="weather-attribution">
+    Weather data by Open-Meteo
+  </div>
+  <!-- MAIN CONTAINER -->
+  <main class="main-container">
+
+    <!-- FORM PANEL -->
+    <section class="panel-card entry-panel" id="entryPanel">
+      <div class="panel-title">
+        <span>New On-Call Entry</span>
+        <span style="font-size: 12px; color: var(--accent-cyan);">Log Details</span>
+      </div>
+
+      <div class="entry-lock" id="entryLock">
+        <div class="entry-lock-icon">🔒</div>
+        <h3>No active report</h3>
+        <p>Start a new on-call report before adding entries.</p>
+        <button type="button" onclick="openStartReportModal()">Start New Report</button>
+      </div>
+
+      <div id="entryFormContent">
+      <!-- OCR Dropzone -->
+      <div class="ocr-dropzone" onclick="document.getElementById('cameraInput').click()">
+        <input type="file" id="cameraInput" hidden accept="image/*">
+        <div style="font-size: 24px;">📸</div>
+        <p>Scan Patient Info</p>
+        <span>Click to upload or take a photo</span>
+      </div>
+
+      <!-- Form -->
+      <form onsubmit="event.preventDefault(); submitForm();">
+        <div class="form-grid">
+
+          <div class="input-group full-width">
+            <label for="date">Date</label>
+            <input type="date" id="date">
+          </div>
+
+          <div class="input-group">
+            <label for="timeIn">Time In</label>
+            <input type="time" id="timeIn">
+          </div>
+
+          <div class="input-group">
+            <label for="timeOut">Time Out</label>
+            <input type="time" id="timeOut">
+          </div>
+
+          <div class="input-group">
+            <label for="orderId">Order ID</label>
+            <input type="text" id="orderId" placeholder="#12345">
+          </div>
+
+          <div class="input-group">
+            <label for="dispatcher">Dispatcher</label>
+            <input 
+              type="text" 
+              id="dispatcher" 
+              placeholder="Dispatcher..."
+              oninput="filterDispatcher(this.value)"
+              autocomplete="off"
+            >
+            <div id="dispatcherSuggestions" class="suggestions-box"></div>
+          </div>
+
+          <div class="input-group full-width">
+            <label for="patientName">Patient Name</label>
+            <input type="text" id="patientName" placeholder="Full Name">
+          </div>
+
+          <div class="input-group full-width">
+            <label for="location">City / Location</label>
+            <input 
+              type="text" 
+              id="location" 
+              placeholder="Type city..." 
+              oninput="filterCities(this.value)"
+              autocomplete="off"
+            >
+            <div id="citySuggestions" class="suggestions-box"></div>
+          </div>
+
+          <div class="input-group">
+            <label for="category">Category</label>
+            <select id="category"></select>
+          </div>
+
+          <div class="input-group">
+            <label for="reason">Equipment</label>
+            <select id="reason"></select>
+          </div>
+
+        </div>
+
+        <button type="submit" class="btn-submit" id="saveEntryButton">Save Entry</button>
+      </form>
+      </div>
+    </section>
+
+    <!-- HISTORY PANEL -->
+    <section class="panel-card">
+      <div class="panel-title">
+        <span>Recent History</span>
+        <div class="history-actions">
+          <button class="btn-action" onclick="exportPDF()">PDF</button>
+          <button class="btn-action" onclick="exportSheet()">Sheets</button>
+          <button class="btn-action btn-danger" onclick="confirmDeleteLast()">Delete Last</button>
+          <button class="btn-action btn-danger" onclick="confirmDelete()">Clear All</button>
+          <button class="btn-action btn-danger"
+        onclick="deleteSelected()">
+Delete Selected
+</button>
+        </div>
+      </div>
+
+      <div class="feed-list" id="historyBox">
+        <p style="text-align:center; color: var(--text-muted); font-size: 13px;">Loading entries...</p>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- REPORT CENTER -->
+  <section class="report-center-section" id="reportCenterSection">
+    <div class="report-center-toolbar">
+      <div class="report-center-title">
+        <h2>Report Center</h2>
+        <p>Review previous on-call periods and identify work patterns.</p>
+      </div>
+      <button type="button" class="report-center-button" onclick="loadReportsCenter()">Refresh Reports</button>
+    </div>
+
+    <div class="analytics-grid">
+      <div class="analytics-card">
+        <span>Total Reports</span>
+        <strong id="analyticsTotalReports">0</strong>
+      </div>
+      <div class="analytics-card">
+        <span>Total Deliveries</span>
+        <strong id="analyticsTotalDeliveries">0</strong>
+      </div>
+      <div class="analytics-card">
+        <span>Total Hours</span>
+        <strong id="analyticsTotalHours">0h 0m</strong>
+      </div>
+      <div class="analytics-card">
+        <span>Average per Report</span>
+        <strong id="analyticsAverageHours">0h 0m</strong>
+      </div>
+    </div>
+
+    <div class="insights-grid">
+      <div class="insight-card">
+        <h3>Most Visited Cities</h3>
+        <div id="topCitiesList"><div class="insight-row"><span>No data yet</span><strong>0</strong></div></div>
+      </div>
+      <div class="insight-card">
+        <h3>Most Delivered Equipment</h3>
+        <div id="topEquipmentList"><div class="insight-row"><span>No data yet</span><strong>0</strong></div></div>
+      </div>
+      <div class="insight-card">
+        <h3>Top Dispatchers</h3>
+        <div id="topDispatchersList"><div class="insight-row"><span>No data yet</span><strong>0</strong></div></div>
+      </div>
+    </div>
+
+    <div class="reports-list" id="reportsList">
+      <div class="empty-reports">Sign in to load your reports.</div>
+    </div>
+  </section>
+
+
+  <!-- REPORT MODALS -->
+
+  <div class="app-modal report-detail-modal" id="reportDetailsModal">
+    <div class="modal-card">
+      <div class="report-detail-header">
+        <div>
+          <h2 id="reportDetailsTitle">Report Details</h2>
+          <p id="reportDetailsSubtitle">Loading report information...</p>
+        </div>
+        <button type="button" class="modal-button" onclick="closeModal('reportDetailsModal')">Close</button>
+      </div>
+
+      <div class="report-detail-summary">
+        <div><span>Status</span><strong id="detailReportStatus">—</strong></div>
+        <div><span>Total Hours</span><strong id="detailReportHours">0h 0m</strong></div>
+        <div><span>Deliveries</span><strong id="detailReportDeliveries">0</strong></div>
+        <div><span>Top City</span><strong id="detailReportTopCity">—</strong></div>
+      </div>
+
+      <div class="modal-actions" style="justify-content:flex-start; margin-top:0;">
+        <button type="button" class="modal-button primary" id="exportCurrentReportButton" onclick="exportSelectedReport()">Export to Sheets</button>
+      </div>
+
+      <div class="report-entry-list" id="reportDetailsEntries">
+        <div class="empty-reports">Loading entries...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-modal" id="startReportModal">
+    <div class="modal-card success">
+      <div class="modal-icon">▶</div>
+      <h2>Start New Report</h2>
+      <p>This begins a new on-call period. Every new entry will be attached to this report until it is closed.</p>
+      <div class="modal-summary">
+        <div class="modal-summary-row"><span>Technician</span><strong id="startReportTechnician">—</strong></div>
+        <div class="modal-summary-row"><span>Start date</span><strong id="startReportDate">—</strong></div>
+        <div class="modal-summary-row"><span>Status</span><strong>ACTIVE</strong></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-button" onclick="closeModal('startReportModal')">Cancel</button>
+        <button type="button" class="modal-button success" id="confirmStartReportButton" onclick="confirmStartReport()">Start Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-modal" id="closeReportModal">
+    <div class="modal-card danger">
+      <div class="modal-icon">■</div>
+      <h2>Close Active Report</h2>
+      <p>After closing, no additional entries can be added to this report. Its records remain available in the spreadsheet and report history.</p>
+      <div class="modal-summary">
+        <div class="modal-summary-row"><span>Report</span><strong id="closeReportId">—</strong></div>
+        <div class="modal-summary-row"><span>Started</span><strong id="closeReportStarted">—</strong></div>
+        <div class="modal-summary-row"><span>Current hours</span><strong id="closeReportHours">0h 0m</strong></div>
+        <div class="modal-summary-row"><span>Deliveries</span><strong id="closeReportDeliveries">0</strong></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-button" onclick="closeModal('closeReportModal')">Keep Open</button>
+        <button type="button" class="modal-button danger" id="confirmCloseReportButton" onclick="confirmCloseReport()">Close Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-modal" id="deleteAllModal">
+    <div class="modal-card danger">
+      <div class="modal-icon">⚠</div>
+      <h2>Administrative Action Required</h2>
+      <p>This operation will permanently delete every On-Call record stored in the system.</p>
+      <ul class="modal-warning-list">
+        <li>All On-Call records will be removed.</li>
+        <li>Reports, calculations and historical data may be affected.</li>
+        <li>Deleted information cannot be recovered.</li>
+      </ul>
+      <p class="modal-warning-final">Only continue if you fully understand the consequences.</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-button" onclick="closeModal('deleteAllModal')">No, Keep Data</button>
+        <button type="button" class="modal-button danger" id="confirmDeleteAllButton" onclick="executeDeleteAll()">Yes, Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-modal" id="reportClosedModal">
+    <div class="modal-card success">
+      <div class="modal-icon">✓</div>
+      <h2>Report Closed</h2>
+      <p>The on-call period was closed successfully. Its entries remain saved for future reporting.</p>
+      <div class="modal-summary">
+        <div class="modal-summary-row"><span>Report</span><strong id="closedReportId">—</strong></div>
+        <div class="modal-summary-row"><span>Total hours</span><strong id="closedReportHours">0h 0m</strong></div>
+        <div class="modal-summary-row"><span>Deliveries</span><strong id="closedReportDeliveries">0</strong></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-button primary" onclick="closeModal('reportClosedModal')">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANIMATED VAN -->
+  <div class="van-track">
+  <div class="van-mini" id="ambulanceVan" onclick="toggleVanSiren()">
+
+    <div class="siren siren-red"></div>
+    <div class="siren siren-blue"></div>
+
+    <div class="cross"></div>
+    <div class="window"></div>
+    <div class="wheel wheel-1"></div>
+    <div class="wheel wheel-2"></div>
+  </div>
+</div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast"></div>
+
+  <!-- SCRIPT INTEGRATION -->
+  <script>
+    let citiesList = [];
+    let dispatcherList = [];
+    let currentUser = null;
+    let currentReportDashboard = null;
+    let lastClosedReportSnapshot = null;
+    let selectedReportId = null;
+    const cityCoordinates = {
+    "Newark":       {x:170,y:120},
+    "Jersey City":  {x:182,y:135},
+    "Elizabeth":    {x:175,y:150},
+    "Paterson":     {x:165,y:95},
+    "Clifton":      {x:170,y:90},
+    "Passaic":      {x:172,y:100},
+    "Hackensack":   {x:178,y:75},
+    "Paramus":      {x:180,y:65},
+    "Fort Lee":     {x:195,y:55},
+    "Hoboken":      {x:190,y:125},
+    "Union":        {x:165,y:160},
+    "Irvington":    {x:165,y:135},
+    "Trenton":      {x:145,y:500},
+    "Princeton":    {x:160,y:410},
+    "Edison":       {x:170,y:300},
+    "New Brunswick":{x:170,y:320},
+    "Woodbridge":   {x:175,y:250},
+    "Piscataway":   {x:165,y:310},
+    // Atlantic County
+"Absecon":              {x:105,y:420},
+"Atlantic City":        {x:100,y:440},
+"Brigantine":           {x:105,y:425},
+"Buena":                {x:80,y:390},
+"Buena Vista":          {x:85,y:400},
+"Egg Harbor City":      {x:95,y:405},
+"Egg Harbor Township":  {x:100,y:420},
+"Estell Manor":         {x:85,y:430},
+"Folsom":               {x:80,y:380},
+"Galloway":             {x:105,y:400},
+"Hamilton":             {x:90,y:390},
+"Hammonton":            {x:75,y:365},
+"Linwood":              {x:95,y:435},
+"Longport":             {x:95,y:445},
+"Margate City":         {x:98,y:442},
+"Mullica":              {x:110,y:385},
+"Northfield":           {x:98,y:430},
+"Pleasantville":        {x:98,y:425},
+"Port Republic":        {x:105,y:415},
+"Somers Point":         {x:98,y:435},
+"Ventnor City":         {x:98,y:438},
+
+// Cape May County
+"Avalon":               {x:75,y:480},
+"Cape May":             {x:55,y:520},
+"Cape May Point":       {x:50,y:525},
+"Dennis":               {x:70,y:470},
+"Lower Township":       {x:60,y:510},
+"Middle Township":      {x:75,y:490},
+"North Wildwood":       {x:85,y:485},
+"Ocean City":            {x:90,y:455},
+"Sea Isle City":        {x:80,y:465},
+"Stone Harbor":         {x:75,y:475},
+"Upper Township":       {x:90,y:450},
+"West Cape May":        {x:55,y:518},
+"West Wildwood":        {x:85,y:490},
+"Wildwood":             {x:82,y:495},
+"Wildwood Crest":       {x:80,y:500},
+// Bergen County - continuação
+
+"Allendale":          {x:185,y:45},
+"Alpine":             {x:205,y:50},
+"Bergenfield":        {x:190,y:80},
+"Bogota":             {x:185,y:105},
+"Carlstadt":          {x:180,y:110},
+"Cliffside Park":     {x:195,y:95},
+"Closter":            {x:195,y:60},
+"Cresskill":          {x:198,y:65},
+"Demarest":           {x:198,y:70},
+"Dumont":             {x:190,y:75},
+"East Rutherford":    {x:178,y:115},
+"Edgewater":          {x:198,y:105},
+"Elmwood Park":       {x:175,y:95},
+"Emerson":            {x:185,y:65},
+"Englewood":          {x:195,y:85},
+"Englewood Cliffs":   {x:198,y:80},
+"Fair Lawn":          {x:178,y:85},
+"Fairview":            {x:192,y:110},
+"Franklin Lakes":     {x:175,y:55},
+"Garfield":           {x:175,y:100},
+"Glen Rock":           {x:180,y:75},
+"Harrington Park":    {x:195,y:55},
+"Hasbrouck Heights":  {x:178,y:105},
+"Haworth":            {x:192,y:65},
+"Hillsdale":           {x:188,y:60},
+"Ho-Ho-Kus":           {x:182,y:55},
+"Leonia":              {x:198,y:90},
+"Little Ferry":        {x:185,y:100},
+"Lodi":                {x:175,y:105},
+"Lyndhurst":           {x:175,y:120},
+"Mahwah":              {x:170,y:35},
+"Maywood":             {x:180,y:95},
+"Midland Park":        {x:180,y:60},
+"Montvale":            {x:185,y:50},
+"Moonachie":           {x:180,y:110},
+"New Milford":         {x:188,y:75},
+"North Arlington":     {x:175,y:115},
+"Northvale":            {x:200,y:55},
+"Norwood":              {x:198,y:60},
+"Oakland":              {x:175,y:50},
+"Old Tappan":           {x:200,y:50},
+"Oradell":              {x:185,y:70},
+"Palisades Park":       {x:195,y:100},
+"Park Ridge":           {x:188,y:55},
+"Ramsey":               {x:175,y:45},
+"Ridgefield":           {x:192,y:100},
+"Ridgefield Park":      {x:188,y:105},
+"Ridgewood":            {x:180,y:65},
+"River Edge":           {x:185,y:80},
+"River Vale":           {x:190,y:60},
+"Rochelle Park":        {x:180,y:90},
+"Rockleigh":            {x:202,y:55},
+"Rutherford":           {x:175,y:125},
+"Saddle Brook":         {x:178,y:100},
+"Saddle River":         {x:180,y:50},
+"South Hackensack":     {x:178,y:110},
+"Teaneck":              {x:190,y:90},
+"Tenafly":              {x:198,y:75},
+"Teterboro":            {x:178,y:105},
+"Upper Saddle River":   {x:180,y:45},
+"Waldwick":             {x:178,y:55},
+"Wallington":           {x:175,y:105},
+"Washington Township":  {x:170,y:70},
+"Westwood":             {x:188,y:60},
+"Wood-Ridge":           {x:178,y:115},
+"Woodcliff Lake":       {x:185,y:55},
+"Wyckoff":              {x:175,y:60},
+// Essex County
+
+"Belleville":        {x:168,y:115},
+"Bloomfield":        {x:165,y:105},
+"Caldwell":          {x:155,y:90},
+"Cedar Grove":       {x:158,y:100},
+"East Orange":       {x:165,y:125},
+"Essex Fells":       {x:155,y:85},
+"Fairfield":         {x:150,y:95},
+"Glen Ridge":        {x:162,y:105},
+"Livingston":        {x:150,y:110},
+"Maplewood":         {x:160,y:145},
+"Millburn":          {x:155,y:155},
+"Montclair":         {x:160,y:100},
+"North Caldwell":    {x:155,y:85},
+"Nutley":            {x:165,y:110},
+"Orange":            {x:162,y:135},
+"Roseland":          {x:150,y:100},
+"South Orange":      {x:158,y:140},
+"Verona":            {x:158,y:105},
+"West Caldwell":     {x:152,y:90},
+"West Orange":       {x:155,y:120},
+
+
+// Hudson County
+
+"Bayonne":            {x:175,y:145},
+"East Newark":        {x:178,y:130},
+"Guttenberg":         {x:195,y:115},
+"Harrison":           {x:178,y:125},
+"Kearny":             {x:172,y:125},
+"North Bergen":       {x:190,y:110},
+"Secaucus":           {x:182,y:110},
+"Union City":         {x:192,y:120},
+"Weehawken":          {x:195,y:120},
+"West New York":      {x:195,y:125},
+
+
+// Passaic County
+
+"Bloomingdale":       {x:150,y:55},
+"Haledon":            {x:162,y:90},
+"Hawthorne":          {x:168,y:90},
+"Little Falls":       {x:165,y:95},
+"North Haledon":      {x:160,y:85},
+"Pompton Lakes":      {x:160,y:65},
+"Prospect Park":      {x:165,y:95},
+"Ringwood":           {x:155,y:45},
+"Totowa":             {x:165,y:100},
+"Wanaque":            {x:155,y:60},
+"Wayne":              {x:165,y:75},
+"West Milford":       {x:145,y:45},
+"Woodland Park":      {x:162,y:100},
+
+// Morris County
+
+"Boonton":             {x:140,y:120},
+"Boonton Township":     {x:135,y:115},
+"Butler":              {x:145,y:80},
+"Chatham Borough":     {x:145,y:145},
+"Chatham Township":    {x:140,y:150},
+"Chester Borough":     {x:125,y:130},
+"Chester Township":    {x:120,y:135},
+"Denville":            {x:135,y:125},
+"Dover":               {x:130,y:140},
+"East Hanover":        {x:150,y:120},
+"Florham Park":        {x:148,y:130},
+"Hanover":             {x:145,y:125},
+"Harding":             {x:135,y:155},
+"Jefferson":           {x:145,y:70},
+"Kinnelon":            {x:150,y:75},
+"Lincoln Park":        {x:155,y:105},
+"Long Hill":           {x:135,y:160},
+"Madison":             {x:145,y:140},
+"Mendham Borough":     {x:130,y:125},
+"Mendham Township":    {x:125,y:120},
+"Mine Hill":           {x:130,y:150},
+"Montville":           {x:145,y:110},
+"Morris Plains":       {x:140,y:135},
+"Morris Township":     {x:135,y:145},
+"Morristown":          {x:140,y:140},
+"Mount Arlington":     {x:125,y:160},
+"Mount Olive":         {x:120,y:170},
+"Mountain Lakes":      {x:135,y:120},
+"Netcong":             {x:120,y:155},
+"Parsippany-Troy Hills": {x:140,y:120},
+"Pequannock":          {x:155,y:85},
+"Randolph":            {x:125,y:150},
+"Riverdale":           {x:155,y:80},
+"Rockaway Borough":    {x:135,y:145},
+"Rockaway Township":   {x:130,y:130},
+"Roxbury":             {x:125,y:160},
+"Victory Gardens":     {x:128,y:150},
+"Wharton":             {x:130,y:155},
+
+
+// Somerset County
+
+"Bedminster":           {x:110,y:190},
+"Bernards Township":    {x:130,y:170},
+"Bernardsville":        {x:125,y:155},
+"Bound Brook":          {x:155,y:220},
+"Branchburg":           {x:115,y:220},
+"Bridgewater":          {x:130,y:210},
+"Far Hills":            {x:115,y:170},
+"Green Brook":          {x:150,y:195},
+"Hillsborough":         {x:125,y:230},
+"Manville":             {x:145,y:220},
+"Millstone":            {x:120,y:245},
+"Montgomery":           {x:110,y:240},
+"North Plainfield":     {x:155,y:180},
+"Peapack-Gladstone":    {x:120,y:160},
+"Raritan":              {x:125,y:215},
+"Rocky Hill":           {x:115,y:250},
+"Somerville":           {x:140,y:215},
+"South Bound Brook":    {x:150,y:225},
+"Warren":               {x:145,y:170},
+"Watchung":             {x:150,y:180},
+
+
+// Hunterdon County
+
+"Alexandria":           {x:70,y:210},
+"Bethlehem":            {x:80,y:210},
+"Bloomsbury":           {x:65,y:190},
+"Califon":              {x:95,y:170},
+"Clinton Town":         {x:100,y:195},
+"Clinton Township":     {x:95,y:200},
+"Delaware":             {x:70,y:240},
+"East Amwell":          {x:100,y:250},
+"Flemington":           {x:95,y:230},
+"Franklin":             {x:90,y:180},
+"Glen Gardner":         {x:80,y:180},
+"Hampton":              {x:85,y:170},
+"High Bridge":          {x:80,y:190},
+"Holland":              {x:70,y:220},
+"Kingwood":             {x:65,y:240},
+"Lambertville":         {x:70,y:260},
+"Lebanon Borough":      {x:90,y:180},
+"Lebanon Township":     {x:85,y:160},
+"Milford":              {x:65,y:230},
+"Raritan Township":     {x:95,y:220},
+"Readington":            {x:105,y:210},
+"Stockton":              {x:75,y:250},
+"Tewksbury":             {x:105,y:170},
+"Union Township":        {x:80,y:200},
+"West Amwell":           {x:75,y:260},
+
+// Mercer County
+
+"East Windsor":          {x:135,y:350},
+"Ewing":                 {x:140,y:470},
+"Hightstown":            {x:140,y:340},
+"Hopewell Borough":      {x:125,y:420},
+"Hopewell Township":     {x:120,y:410},
+"Lawrence":              {x:145,y:430},
+"Pennington":            {x:130,y:450},
+"Robbinsville":          {x:155,y:360},
+"West Windsor":          {x:150,y:390},
+
+
+// Middlesex County
+
+"Carteret":              {x:175,y:220},
+"Cranbury":              {x:155,y:340},
+"Dunellen":              {x:155,y:280},
+"East Brunswick":        {x:170,y:340},
+"Helmetta":              {x:185,y:340},
+"Highland Park":         {x:165,y:305},
+"Jamesburg":             {x:175,y:355},
+"Metuchen":              {x:170,y:270},
+"Middlesex Borough":     {x:145,y:250},
+"Milltown":              {x:175,y:315},
+"Monroe":                {x:185,y:360},
+"North Brunswick":       {x:165,y:330},
+"Old Bridge":            {x:190,y:300},
+"Perth Amboy":           {x:185,y:240},
+"Plainsboro":            {x:150,y:360},
+"Sayreville":            {x:185,y:310},
+"South Amboy":           {x:180,y:260},
+"South Brunswick":       {x:155,y:350},
+"South Plainfield":      {x:160,y:285},
+"South River":           {x:180,y:325},
+"Spotswood":             {x:185,y:335},
+
+// Monmouth County
+
+"Allenhurst":             {x:205,y:420},
+"Allentown":              {x:165,y:360},
+"Asbury Park":            {x:205,y:405},
+"Atlantic Highlands":     {x:220,y:360},
+"Avon-by-the-Sea":        {x:210,y:415},
+"Belmar":                 {x:210,y:420},
+"Bradley Beach":          {x:210,y:415},
+"Brielle":                {x:205,y:435},
+"Colts Neck":             {x:190,y:370},
+"Deal":                   {x:210,y:395},
+"Eatontown":              {x:205,y:390},
+"Englishtown":            {x:185,y:340},
+"Fair Haven":             {x:215,y:370},
+"Farmingdale":            {x:190,y:380},
+"Freehold Borough":       {x:180,y:360},
+"Freehold Township":      {x:180,y:350},
+"Hazlet":                 {x:205,y:330},
+"Highlands":              {x:220,y:350},
+"Holmdel":                {x:205,y:345},
+"Howell":                 {x:180,y:390},
+"Interlaken":             {x:205,y:400},
+"Keansburg":              {x:210,y:320},
+"Keyport":                {x:205,y:325},
+"Lake Como":              {x:210,y:425},
+"Little Silver":          {x:210,y:375},
+"Loch Arbour":            {x:205,y:395},
+"Long Branch":            {x:210,y:390},
+"Manalapan":              {x:175,y:350},
+"Manasquan":              {x:205,y:435},
+"Marlboro":               {x:190,y:340},
+"Matawan":                {x:200,y:335},
+"Middletown":             {x:215,y:340},
+"Millstone":              {x:165,y:380},
+"Monmouth Beach":         {x:215,y:385},
+"Neptune City":           {x:205,y:410},
+"Neptune Township":       {x:200,y:410},
+"Ocean Township":         {x:205,y:385},
+"Oceanport":              {x:210,y:385},
+"Red Bank":               {x:210,y:365},
+"Roosevelt":              {x:170,y:360},
+"Rumson":                 {x:215,y:365},
+"Sea Bright":             {x:220,y:375},
+"Sea Girt":               {x:205,y:440},
+"Shrewsbury Borough":     {x:205,y:370},
+"Shrewsbury Township":    {x:200,y:375},
+"Spring Lake":            {x:210,y:430},
+"Spring Lake Heights":    {x:210,y:425},
+"Tinton Falls":           {x:200,y:390},
+"Union Beach":            {x:205,y:325},
+"Upper Freehold":         {x:160,y:370},
+"Wall":                   {x:195,y:410},
+"West Long Branch":       {x:210,y:395},
+
+
+// Ocean County
+
+"Barnegat":               {x:150,y:500},
+"Barnegat Light":         {x:145,y:490},
+"Bay Head":               {x:195,y:460},
+"Beach Haven":            {x:150,y:560},
+"Beachwood":              {x:165,y:500},
+"Berkeley":               {x:160,y:510},
+"Brick":                  {x:190,y:465},
+"Eagleswood":             {x:145,y:530},
+"Harvey Cedars":          {x:150,y:520},
+"Island Heights":         {x:170,y:495},
+"Jackson":                {x:175,y:430},
+"Lacey":                  {x:150,y:520},
+"Lakehurst":              {x:145,y:450},
+"Lakewood":               {x:175,y:450},
+"Lavallette":             {x:175,y:520},
+"Little Egg Harbor":      {x:145,y:545},
+"Long Beach Township":    {x:150,y:530},
+"Manchester":             {x:150,y:470},
+"Mantoloking":            {x:190,y:470},
+"Ocean Gate":              {x:165,y:510},
+"Ocean Township":          {x:155,y:485},
+"Pine Beach":              {x:170,y:505},
+"Plumsted":                {x:150,y:420},
+"Point Pleasant":          {x:195,y:455},
+"Point Pleasant Beach":    {x:200,y:455},
+"Seaside Heights":         {x:175,y:525},
+"Seaside Park":            {x:170,y:530},
+"Ship Bottom":             {x:150,y:535},
+"South Toms River":        {x:165,y:515},
+"Stafford":                {x:150,y:550},
+"Surf City":               {x:150,y:525},
+"Toms River":              {x:170,y:490},
+"Tuckerton":               {x:145,y:545},
+
+// Gloucester County
+
+"Clayton":              {x:80,y:310},
+"Deptford":             {x:110,y:300},
+"East Greenwich":       {x:95,y:285},
+"Elk":                  {x:75,y:330},
+"Franklin":             {x:85,y:300},
+"Glassboro":            {x:90,y:320},
+"Greenwich":            {x:65,y:300},
+"Logan":                {x:95,y:260},
+"Mantua":               {x:100,y:315},
+"Monroe":               {x:100,y:340},
+"National Park":        {x:110,y:280},
+"Newfield":             {x:80,y:340},
+"Paulsboro":            {x:105,y:270},
+"Pitman":               {x:95,y:325},
+"South Harrison":       {x:85,y:290},
+"Swedesboro":           {x:90,y:260},
+"Washington Township":  {x:95,y:330},
+"Wenonah":              {x:105,y:310},
+"West Deptford":        {x:105,y:290},
+"Westville":            {x:110,y:285},
+"Woodbury":             {x:110,y:300},
+"Woodbury Heights":     {x:105,y:305},
+"Woolwich":             {x:85,y:270},
+
+
+// Cumberland County
+
+"Bridgeton":             {x:60,y:390},
+"Commercial":            {x:70,y:350},
+"Deerfield":             {x:65,y:370},
+"Downe":                 {x:55,y:410},
+"Fairfield":             {x:75,y:380},
+"Greenwich":             {x:55,y:370},
+"Hopewell":              {x:65,y:400},
+"Lawrence":              {x:75,y:390},
+"Maurice River":         {x:55,y:430},
+"Millville":             {x:70,y:410},
+"Shiloh":                {x:55,y:385},
+"Stow Creek":            {x:50,y:360},
+"Upper Deerfield":       {x:65,y:365},
+"Vineland":              {x:80,y:390},
+
+
+// Salem County
+
+"Alloway":               {x:45,y:310},
+"Carneys Point":         {x:35,y:275},
+"Elmer":                 {x:75,y:350},
+"Elsinboro":             {x:40,y:320},
+"Lower Alloways Creek":  {x:40,y:340},
+"Mannington":            {x:50,y:330},
+"Oldmans":               {x:60,y:280},
+"Penns Grove":           {x:40,y:285},
+"Pennsville":            {x:35,y:300},
+"Pilesgrove":            {x:50,y:300},
+"Pittsgrove":            {x:65,y:350},
+"Quinton":               {x:45,y:360},
+"Salem":                 {x:40,y:315},
+"Upper Pittsgrove":      {x:55,y:350},
+"Woodstown":             {x:55,y:310},
+
+// Warren County
+
+"Allamuchy":              {x:75,y:140},
+"Alpha":                  {x:55,y:170},
+"Belvidere":              {x:60,y:160},
+"Blairstown":             {x:55,y:110},
+"Franklin":               {x:70,y:180},
+"Frelinghuysen":          {x:65,y:120},
+"Greenwich":              {x:50,y:150},
+"Hackettstown":           {x:80,y:150},
+"Hardwick":               {x:55,y:100},
+"Harmony":                {x:55,y:180},
+"Hope":                   {x:65,y:130},
+"Independence":           {x:75,y:150},
+"Knowlton":               {x:50,y:130},
+"Liberty":                {x:70,y:170},
+"Lopatcong":              {x:55,y:190},
+"Mansfield":              {x:80,y:180},
+"Oxford":                 {x:75,y:170},
+"Phillipsburg":           {x:50,y:200},
+"Pohatcong":              {x:55,y:190},
+"Washington Borough":     {x:75,y:180},
+"Washington Township":    {x:80,y:160},
+"White":                  {x:70,y:200},
+
+
+// Sussex County
+
+"Andover Borough":        {x:100,y:80},
+"Andover Township":       {x:95,y:75},
+"Branchville":            {x:80,y:55},
+"Byram":                  {x:110,y:100},
+"Frankford":              {x:90,y:65},
+"Franklin Borough":       {x:95,y:90},
+"Fredon":                 {x:70,y:100},
+"Green":                  {x:85,y:100},
+"Hamburg":                {x:90,y:45},
+"Hampton":                {x:95,y:110},
+"Hardyston":              {x:85,y:60},
+"Hopatcong":              {x:115,y:100},
+"Lafayette":              {x:85,y:80},
+"Montague":               {x:55,y:40},
+"Newton":                 {x:95,y:100},
+"Ogdensburg":             {x:100,y:65},
+"Sandyston":              {x:60,y:55},
+"Sparta":                 {x:110,y:70},
+"Stanhope":               {x:105,y:95},
+"Stillwater":             {x:75,y:70},
+"Sussex Borough":         {x:85,y:40},
+"Vernon":                 {x:100,y:35},
+"Walpack":                {x:55,y:60},
+"Wantage":                {x:80,y:35},
+
+
+// Union County
+
+"Berkeley Heights":       {x:150,y:155},
+"Clark":                  {x:165,y:180},
+"Cranford":               {x:165,y:165},
+"Fanwood":                {x:155,y:170},
+"Garwood":                {x:165,y:160},
+"Hillside":               {x:168,y:140},
+"Kenilworth":             {x:165,y:150},
+"Linden":                 {x:175,y:175},
+"Mountainside":           {x:155,y:160},
+"New Providence":         {x:150,y:150},
+"Plainfield":             {x:155,y:190},
+"Rahway":                 {x:170,y:190},
+"Roselle":                {x:170,y:170},
+"Roselle Park":           {x:168,y:165},
+"Scotch Plains":          {x:155,y:180},
+"Springfield":            {x:155,y:140},
+"Summit":                 {x:150,y:145},
+"Westfield":               {x:160,y:170},
+"Winfield":                {x:175,y:200}
+};
+
+    /* CATEGORIES & EQUIPMENT */
+    function loadCategories() {
+      google.script.run.withSuccessHandler(function(data) {
+        const catSelect = document.getElementById("category");
+        const reasonSelect = document.getElementById("reason");
+
+        catSelect.innerHTML = '<option value="">Select category...</option>';
+        reasonSelect.innerHTML = '<option value="">Select equipment...</option>';
+
+        if (data && data.categories) {
+          data.categories.forEach(function(cat) {
+            const opt = document.createElement("option");
+            opt.value = cat;
+            opt.textContent = cat;
+            catSelect.appendChild(opt);
+          });
+        }
+
+        catSelect.addEventListener("change", function() {
+          const selectedCat = catSelect.value;
+          reasonSelect.innerHTML = '<option value="">Select equipment...</option>';
+
+          if (!selectedCat) return;
+
+          const list = (data && data.map) ? (data.map[selectedCat] || []) : [];
+          list.forEach(function(item) {
+            const opt = document.createElement("option");
+            opt.value = item;
+            opt.textContent = item;
+            reasonSelect.appendChild(opt);  
+          });
+        });
+      }).loadEquipmentByCategory();
+    }
+    
+
+    /* RECENT HISTORY & FEED */
+    function loadHistoryBox() {
+      google.script.run.withSuccessHandler(function(rows) {
+        const box = document.getElementById("historyBox");
+        box.innerHTML = "";
+        drawMapMarkers(rows);
+
+        if (!rows || rows.length === 0) {
+          box.innerHTML = "<p style='text-align:center; color: var(--text-muted); font-size: 13px;'>No history found.</p>";
+          document.getElementById("totalDeliveriesBox").innerText = "0 Orders";
+          return;
+        }
+
+        document.getElementById("totalDeliveriesBox").innerText = `${rows.length} Orders`;
+
+        if (rows[0] && rows[0].location) {
+          document.getElementById("activeLocationBox").innerText = rows[0].location;
+        }
+
+        rows.forEach(function(r, index) {
+          const div = document.createElement("div");
+          div.className = "feed-item";
+          div.innerHTML = `
+<div class="feed-header">
+    <label>
+        <input type="checkbox"
+               class="historyCheck"
+               data-row="${r.sheetRow}">
+    </label>
+
+    <span class="feed-patient">${r.patient || 'Unknown Patient'}</span>
+
+    <span class="feed-badge">${r.reason || 'General'}</span>
+</div>
+
+<div class="feed-details">
+    <div>Order: <strong>${r.orderId || "-"}</strong></div>
+    <div>Time: <strong>${r.timeIn} - ${r.timeOut}</strong></div>
+    <div>Hours: <strong>${r.hours}</strong></div>
+</div>
+
+<div class="feed-details">
+    <div>City: <strong>${r.location}</strong></div>
+    <div>Date: <strong>${r.date}</strong></div>
+</div>
+`;
+          box.appendChild(div);
+        });
+      }).loadRecentHistory(currentUser?.email || "");
+    }
+
+    /* TOAST */
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => { t.classList.remove("show"); }, 3000);
+    }
+
+    /* SUBMIT FORM */
+    function submitForm() {
+      const payload = {
+        date: document.getElementById("date").value,
+        timeIn: document.getElementById("timeIn").value,
+        timeOut: document.getElementById("timeOut").value,
+        orderId: document.getElementById("orderId").value,
+        patientName: document.getElementById("patientName").value,
+        location: document.getElementById("location").value,
+        dispatcher: document.getElementById("dispatcher").value,
+        category: document.getElementById("category").value,
+        reason: document.getElementById("reason").value,
+        userEmail: currentUser?.email || ""
+      };
+
+      if (!payload.date || !payload.timeIn || !payload.timeOut) {
+        showToast("Fill Date, Time In, and Time Out!");
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false) {
+            showToast(result?.message || "Unable to save entry.");
+            if (result?.code === "NO_ACTIVE_REPORT") loadReportDashboard();
+            return;
+          }
+          showToast("Registered successfully!");
+          document.getElementById("orderId").value = "";
+          document.getElementById("patientName").value = "";
+          document.getElementById("location").value = "";
+          document.getElementById("dispatcher").value = "";
+          document.getElementById("category").value = "";
+          document.getElementById("reason").innerHTML = '<option value="">Select equipment...</option>';
+
+          loadHistoryBox();
+          loadTotalHours();
+          loadReportDashboard();
+        })
+        .withFailureHandler(function(error) {
+          showToast(error?.message || "Unable to save entry.");
+        })
+        .saveOnCall(payload);
+    
+}
+
+    /* REPORT CENTER */
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderRanking(containerId, items) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      if (!items || items.length === 0) {
+        container.innerHTML = '<div class="insight-row"><span>No data yet</span><strong>0</strong></div>';
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="insight-row">
+          <span title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+          <strong>${Number(item.count || 0)}</strong>
+        </div>
+      `).join("");
+    }
+
+    function renderReportsList(reportCards) {
+      const container = document.getElementById("reportsList");
+      if (!container) return;
+
+      if (!reportCards || reportCards.length === 0) {
+        container.innerHTML = '<div class="empty-reports">No reports were found. Start your first on-call report to begin.</div>';
+        return;
+      }
+
+      container.innerHTML = reportCards.map(card => {
+        const report = card.report || {};
+        const active = report.status === "ACTIVE";
+        const period = report.endDate
+          ? `${formatDisplayDate(report.startDate)} – ${formatDisplayDate(report.endDate)}`
+          : `Started ${formatDisplayDate(report.startDate)}`;
+
+        return `
+          <article class="report-list-card">
+            <div class="report-list-primary">
+              <strong>${escapeHtml(report.reportId || "Report")}</strong>
+              <span>${escapeHtml(period)}</span>
+              <div class="report-list-status ${active ? "active" : ""}">
+                ${active ? "● ACTIVE" : "CLOSED"}
+              </div>
+            </div>
+            <div class="report-list-stat">
+              <span>Hours</span>
+              <strong>${formatHours(card.totalHours || 0)}</strong>
+            </div>
+            <div class="report-list-stat">
+              <span>Deliveries</span>
+              <strong>${Number(card.deliveries || 0)}</strong>
+            </div>
+            <div class="report-list-stat">
+              <span>Top City</span>
+              <strong>${escapeHtml(card.topCity?.name || "—")}</strong>
+            </div>
+            <button type="button" class="report-open-button"
+              onclick="openReportDetails('${escapeHtml(report.reportId || "")}')">
+              Open Report
+            </button>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function loadReportsCenter() {
+      if (!currentUser?.email) return;
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false) {
+            showToast(result?.message || "Unable to load reports.");
+            return;
+          }
+
+          const analytics = result.analytics || {};
+          document.getElementById("analyticsTotalReports").textContent =
+            Number(analytics.totalReports || 0);
+          document.getElementById("analyticsTotalDeliveries").textContent =
+            Number(analytics.totalDeliveries || 0);
+          document.getElementById("analyticsTotalHours").textContent =
+            formatHours(analytics.totalHours || 0);
+          document.getElementById("analyticsAverageHours").textContent =
+            formatHours(analytics.averageHoursPerReport || 0);
+
+          renderRanking("topCitiesList", analytics.topCities);
+          renderRanking("topEquipmentList", analytics.topEquipment);
+          renderRanking("topDispatchersList", analytics.topDispatchers);
+          renderReportsList(result.reports);
+        })
+        .withFailureHandler(function(error) {
+          showToast(error?.message || "Unable to load reports.");
+        })
+        .getReportsOverview(currentUser.email);
+    }
+
+    function openReportDetails(reportId) {
+      if (!reportId || !currentUser?.email) return;
+
+      selectedReportId = reportId;
+      document.getElementById("reportDetailsTitle").textContent = reportId;
+      document.getElementById("reportDetailsSubtitle").textContent = "Loading report information...";
+      document.getElementById("reportDetailsEntries").innerHTML =
+        '<div class="empty-reports">Loading entries...</div>';
+      openModal("reportDetailsModal");
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false) {
+            showToast(result?.message || "Unable to open report.");
+            closeModal("reportDetailsModal");
+            return;
+          }
+
+          const report = result.report || {};
+          const summary = result.summary || {};
+          const entries = result.entries || [];
+
+          document.getElementById("reportDetailsTitle").textContent =
+            report.reportId || "Report Details";
+          document.getElementById("reportDetailsSubtitle").textContent =
+            report.endDate
+              ? `${formatDisplayDate(report.startDate)} – ${formatDisplayDate(report.endDate)}`
+              : `Started ${formatDisplayDate(report.startDate)}`;
+          document.getElementById("detailReportStatus").textContent =
+            report.status || "—";
+          document.getElementById("detailReportHours").textContent =
+            formatHours(summary.totalHours || 0);
+          document.getElementById("detailReportDeliveries").textContent =
+            Number(summary.deliveries || 0);
+          document.getElementById("detailReportTopCity").textContent =
+            summary.topCity?.name || "—";
+
+          const list = document.getElementById("reportDetailsEntries");
+          if (!entries.length) {
+            list.innerHTML = '<div class="empty-reports">This report does not contain any entries.</div>';
+            return;
+          }
+
+          list.innerHTML = entries.map(entry => `
+            <article class="report-entry-card">
+              <div class="report-entry-top">
+                <strong>${escapeHtml(entry.patient || "Unknown Patient")}</strong>
+                <span>${escapeHtml(entry.reason || "General")}</span>
+              </div>
+              <div class="report-entry-bottom">
+                <span>${escapeHtml(entry.date || "—")} · ${escapeHtml(entry.timeIn || "—")} – ${escapeHtml(entry.timeOut || "—")}</span>
+                <span>${escapeHtml(entry.location || "Unknown City")} · ${escapeHtml(entry.hours || "0:00:00")}</span>
+              </div>
+            </article>
+          `).join("");
+        })
+        .withFailureHandler(function(error) {
+          showToast(error?.message || "Unable to open report.");
+          closeModal("reportDetailsModal");
+        })
+        .getReportDetails(currentUser.email, reportId);
+    }
+
+ function exportSelectedReport() {
+  if (!selectedReportId || !currentUser?.email) {
+    showToast("Open a report before exporting.");
+    return;
+  }
+
+  const button =
+    document.getElementById("exportCurrentReportButton");
+
+  if (!button) {
+    showToast("Export button was not found.");
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Preparing download...";
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      button.disabled = false;
+      button.textContent = "Export to Sheets";
+
+      const downloaded = downloadExportedFile(result);
+
+      if (downloaded) {
+        showToast("Spreadsheet downloaded successfully.");
+      }
+    })
+    .withFailureHandler(function(error) {
+      button.disabled = false;
+      button.textContent = "Export to Sheets";
+
+      console.error("Report export error:", error);
+
+      showToast(
+        error?.message || "Unable to export this report."
+      );
+    })
+    .exportReportToSheet(
+      currentUser.email,
+      selectedReportId
+    );
+}
+function downloadExportedFile(result) {
+  if (!result || result.success === false) {
+    showToast(
+      result?.message || "Unable to export the spreadsheet."
+    );
+    return false;
+  }
+
+  if (!result.base64) {
+    showToast("The exported file was not received.");
+    return false;
+  }
+
+  try {
+    const binaryString = atob(result.base64);
+    const bytes = new Uint8Array(binaryString.length);
+
+    for (let index = 0; index < binaryString.length; index++) {
+      bytes[index] = binaryString.charCodeAt(index);
+    }
+
+    const blob = new Blob([bytes], {
+      type:
+        result.mimeType ||
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = downloadUrl;
+    link.download =
+      result.fileName || "OnCallReport.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(function () {
+      URL.revokeObjectURL(downloadUrl);
+    }, 1000);
+
+    return true;
+  } catch (error) {
+    console.error("Spreadsheet download error:", error);
+    showToast("Unable to download the spreadsheet.");
+    return false;
+  }
+}
+    /* REPORT OPERATIONS */
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.add("is-open");
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.remove("is-open");
+    }
+
+    function getTechnicianName() {
+      const fullName = currentUser?.user_metadata?.full_name?.trim();
+      return fullName || currentUser?.email?.split("@")[0] || "Technician";
+    }
+
+    function formatDisplayDate(value) {
+      if (!value) return "—";
+      const parsed = new Date(`${value}T12:00:00`);
+      if (Number.isNaN(parsed.getTime())) return value;
+      return parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
+    }
+
+    function setEntryFormEnabled(enabled) {
+      const content = document.getElementById("entryFormContent");
+      const lock = document.getElementById("entryLock");
+      const saveButton = document.getElementById("saveEntryButton");
+
+      content?.classList.toggle("form-disabled", !enabled);
+      lock?.classList.toggle("is-visible", !enabled);
+      if (saveButton) saveButton.disabled = !enabled;
+    }
+
+    function renderReportDashboard(data) {
+      currentReportDashboard = data || null;
+
+      const card = document.getElementById("reportStatusCard");
+      const stateText = document.getElementById("reportStateText");
+      const metaText = document.getElementById("reportMetaText");
+      const actionButton = document.getElementById("reportActionButton");
+
+      const active = Boolean(data?.success && data?.activeReport);
+
+      card.classList.toggle("is-active", active);
+      card.classList.toggle("is-inactive", !active);
+      stateText.textContent = active ? "ON-CALL" : "OFF-CALL";
+      actionButton.textContent = active ? "Close Report" : "Start Report";
+
+      if (active) {
+        metaText.textContent =
+          `${data.activeReport.reportId} · Started ${formatDisplayDate(data.activeReport.startDate)}`;
+      } else if (data?.lastReport) {
+        metaText.textContent =
+          `Last: ${data.lastReport.reportId} · ${formatDisplayDate(data.lastReport.endDate || data.lastReport.startDate)}`;
+      } else {
+        metaText.textContent = "No active report";
+      }
+
+      setEntryFormEnabled(active);
+    }
+
+    function loadReportDashboard() {
+      if (!currentUser?.email) {
+        renderReportDashboard(null);
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(data) {
+          renderReportDashboard(data);
+          if (data?.activeReport) {
+            document.getElementById("totalHoursBox").innerText =
+              formatHours(data.totalHours || 0);
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error("Report dashboard error:", error);
+          renderReportDashboard(null);
+        })
+        .getReportDashboard(currentUser.email);
+    }
+
+    function handleReportAction() {
+      if (currentReportDashboard?.activeReport) {
+        openCloseReportModal();
+      } else {
+        openStartReportModal();
+      }
+    }
+
+    function openStartReportModal() {
+      if (!currentUser?.email) {
+        showToast("Sign in before starting a report.");
+        return;
+      }
+
+      document.getElementById("startReportTechnician").textContent =
+        getTechnicianName();
+
+      document.getElementById("startReportDate").textContent =
+        new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        });
+
+      openModal("startReportModal");
+    }
+
+    function confirmStartReport() {
+      const button = document.getElementById("confirmStartReportButton");
+      button.disabled = true;
+      button.textContent = "Starting...";
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          button.disabled = false;
+          button.textContent = "Start Report";
+
+          if (!result || result.success === false) {
+            showToast(result?.message || "Unable to start report.");
+            return;
+          }
+
+          closeModal("startReportModal");
+          showToast("On-call report started.");
+          loadReportDashboard();
+          loadHistoryBox();
+          loadTotalHours();
+          loadReportsCenter();
+          loadReportsCenter();
+        })
+        .withFailureHandler(function(error) {
+          button.disabled = false;
+          button.textContent = "Start Report";
+          showToast(error?.message || "Unable to start report.");
+        })
+        .startNewReport(
+          currentUser.email,
+          getTechnicianName(),
+          document.getElementById("date").value || ""
+        );
+    }
+
+    function openCloseReportModal() {
+      const report = currentReportDashboard?.activeReport;
+      if (!report) {
+        showToast("No active report was found.");
+        return;
+      }
+
+      document.getElementById("closeReportId").textContent = report.reportId;
+      document.getElementById("closeReportStarted").textContent =
+        formatDisplayDate(report.startDate);
+      document.getElementById("closeReportHours").textContent =
+        formatHours(currentReportDashboard.totalHours || 0);
+      document.getElementById("closeReportDeliveries").textContent =
+        String(document.querySelectorAll("#historyBox .feed-item").length);
+
+      openModal("closeReportModal");
+    }
+
+    function confirmCloseReport() {
+      const button = document.getElementById("confirmCloseReportButton");
+      const report = currentReportDashboard?.activeReport;
+      const hours = currentReportDashboard?.totalHours || 0;
+      const deliveries = document.querySelectorAll("#historyBox .feed-item").length;
+
+      if (!report) return;
+
+      button.disabled = true;
+      button.textContent = "Closing...";
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          button.disabled = false;
+          button.textContent = "Close Report";
+
+          if (!result || result.success === false) {
+            showToast(result?.message || "Unable to close report.");
+            return;
+          }
+
+          lastClosedReportSnapshot = {
+            reportId: report.reportId,
+            hours: hours,
+            deliveries: deliveries
+          };
+
+          closeModal("closeReportModal");
+
+          document.getElementById("closedReportId").textContent =
+            lastClosedReportSnapshot.reportId;
+          document.getElementById("closedReportHours").textContent =
+            formatHours(lastClosedReportSnapshot.hours);
+          document.getElementById("closedReportDeliveries").textContent =
+            String(lastClosedReportSnapshot.deliveries);
+
+          openModal("reportClosedModal");
+          loadReportDashboard();
+          loadHistoryBox();
+          loadTotalHours();
+          loadReportsCenter();
+          loadReportsCenter();
+        })
+        .withFailureHandler(function(error) {
+          button.disabled = false;
+          button.textContent = "Close Report";
+          showToast(error?.message || "Unable to close report.");
+        })
+        .closeActiveReport(currentUser.email, "");
+    }
+
+    document.addEventListener("click", function(event) {
+      if (event.target.classList.contains("app-modal")) {
+        event.target.classList.remove("is-open");
+      }
+    });
+
+    /* DELETE & EXPORT */
+    function confirmDelete() {
+      openModal("deleteAllModal");
+    }
+
+    function executeDeleteAll() {
+      const button = document.getElementById("confirmDeleteAllButton");
+      button.disabled = true;
+      button.textContent = "Deleting...";
+
+      google.script.run
+        .withSuccessHandler(function() {
+          closeModal("deleteAllModal");
+          showToast("All history was permanently deleted.");
+          loadHistoryBox();
+          loadTotalHours();
+          loadReportDashboard();
+          button.disabled = false;
+          button.textContent = "Yes, Permanently Delete";
+        })
+        .withFailureHandler(function(error) {
+          showToast(error?.message || "Unable to delete history.");
+          button.disabled = false;
+          button.textContent = "Yes, Permanently Delete";
+        })
+        .deleteHistory(currentUser?.email || "");
+    }
+
+    function confirmDeleteLast() {
+      if (confirm("Delete last entry?")) {
+        google.script.run.withSuccessHandler(function() {
+          showToast("Last entry deleted!");
+          loadHistoryBox();
+          loadTotalHours();
+        }).deleteLastEntry(currentUser?.email || "");
+      }
+    }
+
+    function loadTotalHours() {
+      google.script.run.withSuccessHandler(function(total) {
+        document.getElementById("totalHoursBox").innerText = formatHours(total);
+      }).getTotalHours(currentUser?.email || "");
+    }
+
+    function formatHours(decimal) {
+      if (!decimal) return "0h 0m";
+      const hours = Math.floor(decimal);
+      const minutes = Math.round((decimal - hours) * 60);
+      return `${hours}h ${minutes}m`;
+    }
+
+    function exportPDF() {
+      google.script.run.withSuccessHandler(function(url) {
+        if (url) {
+          showToast("PDF exported!");
+          window.open(url, "_blank");
+        } else {
+          showToast("Export failed.");
+        }
+      }).exportToPDF(currentUser?.email || "");
+    }
+
+    function exportSheet() {
+  if (!currentUser?.email) {
+    showToast("You must be signed in.");
+    return;
+  }
+
+  showToast("Preparing spreadsheet...");
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      const downloaded = downloadExportedFile(result);
+
+      if (downloaded) {
+        showToast("Spreadsheet downloaded successfully.");
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error("Spreadsheet export error:", error);
+
+      showToast(
+        error?.message || "Unable to export the spreadsheet."
+      );
+    })
+    .exportToSheet(currentUser.email);
+}
+
+    /* AUTOCOMPLETE (CITIES & DISPATCHERS) */
+    google.script.run.withSuccessHandler(function(data) {
+      citiesList = data || [];
+    }).getCitiesFromSheet();
+
+    google.script.run.withSuccessHandler(function(data) {
+      dispatcherList = data || [];
+    }).getDispatchers();
+
+    function filterCities(text) {
+      const box = document.getElementById("citySuggestions");
+      box.innerHTML = "";
+      if (!text || text.length < 1) return;
+
+      const matches = citiesList.filter(item => {
+        const name = typeof item === 'string' ? item : (item.city || '');
+        return name.toLowerCase().includes(text.toLowerCase());
+      });
+
+      matches.slice(0, 10).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "suggestion-item";
+        const cityName = typeof item === 'string' ? item : item.city;
+        const county = (typeof item === 'object' && item.county) ? ` (${item.county})` : '';
+        div.textContent = `${cityName}${county}`;
+        
+        div.onclick = () => {
+          document.getElementById("location").value = cityName;
+          box.innerHTML = "";
+        };
+        box.appendChild(div);
+      });
+    }
+
+    function filterDispatcher(text) {
+      const box = document.getElementById("dispatcherSuggestions");
+      box.innerHTML = "";
+      if (!text || text.length < 1) return;
+
+      const matches = dispatcherList.filter(name =>
+        name.toLowerCase().includes(text.toLowerCase())
+      );
+
+      matches.slice(0, 10).forEach(name => {
+        const div = document.createElement("div");
+        div.className = "suggestion-item";
+        div.textContent = name;
+        div.onclick = () => {
+          document.getElementById("dispatcher").value = name;
+          box.innerHTML = "";
+        };
+        box.appendChild(div);
+      });
+    }
+
+    /* OCR - TESSERACT PROCESSOR OTIMIZADO E FILTRADO */
+    document.getElementById("cameraInput").addEventListener("change", async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      showToast("Processing OCR image...");
+
+      try {
+        // Redimensiona a foto para acelerar o motor Tesseract no navegador
+        const compressedImage = await resizeImageForOCR(file, 1200);
+
+        const result = await Tesseract.recognize(compressedImage, 'eng');
+        const text = result.data.text;
+        const lines = text.split("\n");
+
+        for (let line of lines) {
+          let cleaned = line.replace(/^close\s*/i, "").trim();
+          
+          // Remove símbolos como @, hashtags, e palavras indesejadas (Deliver, Delivery, etc.)
+          cleaned = cleaned.replace(/^[@#\-_.,*]+\s*/g, "") 
+                           .replace(/^(Deliver|Delivery|Patient|Name)\b[:\s]*/gi, "") 
+                           .replace(/\b(Deliver|Delivery)$/gi, "") 
+                           .trim();
+
+          if (cleaned.match(/([A-Za-z]+ ){1,}[A-Za-z]+/)) {
+            document.getElementById("patientName").value = cleaned;
+            break;
+          }
+        }
+
+        const orderLine = text.match(/Patient Id[\s\S]*?(\d+)\s+(\d+)/i) || text.match(/(\d{5,})/);
+        if (orderLine) {
+          document.getElementById("orderId").value = (orderLine[2] || orderLine[1]).trim();
+        }
+
+        if (citiesList && citiesList.length > 0) {
+          for (let item of citiesList) {
+            const cityName = typeof item === 'string' ? item : item.city;
+            if (cityName && new RegExp("\\b" + cityName + "\\b", "i").test(text)) {
+              document.getElementById("location").value = cityName;
+              break;
+            }
+          }
+        }
+
+        showToast("OCR complete!");
+      } catch (err) {
+        console.error(err);
+        showToast("OCR Error.");
+      }
+    });
+
+    // Função de compressão de imagem para agilizar o Tesseract
+    function resizeImageForOCR(file, maxDimension) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const img = new Image();
+          img.onload = function() {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > maxDimension) {
+                height *= maxDimension / width;
+                width = maxDimension;
+              }
+            } else {
+              if (height > maxDimension) {
+                width *= maxDimension / height;
+                height = maxDimension;
+              }
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+              resolve(blob);
+            }, 'image/jpeg', 0.85);
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    function deleteSelected() {
+      const sheetRows = Array.from(
+        document.querySelectorAll(".historyCheck:checked")
+      ).map(check => Number(check.dataset.row))
+       .filter(Number.isInteger);
+
+      if (sheetRows.length === 0) {
+        showToast("Select at least one entry.");
+        return;
+      }
+
+      if (!confirm(`Delete ${sheetRows.length} selected ${sheetRows.length === 1 ? "entry" : "entries"}?`)) {
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false) {
+            showToast(result?.message || "Unable to delete selected entries.");
+            return;
+          }
+
+          showToast(result.message || "Selected entries deleted.");
+          loadHistoryBox();
+          loadTotalHours();
+          loadReportDashboard();
+          loadReportsCenter();
+        })
+        .withFailureHandler(function(error) {
+          showToast(error?.message || "Unable to delete selected entries.");
+        })
+        .deleteSelectedEntries(sheetRows, currentUser?.email || "");
+    }
+function addMarker(x, y, city, count) {
+  const svg = document.getElementById("cityMarkers");
+  const tooltip = document.getElementById("mapTooltip");
+  const namespace = "http://www.w3.org/2000/svg";
+
+  if (!svg) return;
+
+  const markerGroup = document.createElementNS(namespace, "g");
+  markerGroup.classList.add("map-marker");
+
+  markerGroup.addEventListener("mousemove", function (e) {
+    if (!tooltip) return;
+
+    tooltip.style.display = "block";
+
+    tooltip.innerHTML = `
+      <strong>${city}</strong><br>
+      ${count} ${count === 1 ? "delivery" : "deliveries"}
+    `;
+
+    const panel = document.getElementById("mapPanel");
+const rect = panel.getBoundingClientRect();
+
+tooltip.style.left = e.clientX - rect.left + 12 + "px";
+tooltip.style.top = e.clientY - rect.top - 10 + "px";
+  });
+
+  markerGroup.addEventListener("mouseleave", function () {
+    if (!tooltip) return;
+
+    tooltip.style.display = "none";
+  });
+
+  const pulse = document.createElementNS(namespace, "circle");
+  pulse.setAttribute("cx", x);
+  pulse.setAttribute("cy", y);
+  pulse.setAttribute("r", 10);
+  pulse.setAttribute("class", "marker-pulse");
+
+  const circle = document.createElementNS(namespace, "circle");
+
+  const markerRadius = Math.min(
+    7 + Math.max(count - 1, 0) * 1.2,
+    17
+  );
+
+  circle.setAttribute("cx", x);
+  circle.setAttribute("cy", y);
+  circle.setAttribute("r", markerRadius);
+  circle.setAttribute("class", "marker-circle");
+
+  markerGroup.appendChild(pulse);
+  markerGroup.appendChild(circle);
+
+  if (count > 1) {
+    const text = document.createElementNS(namespace, "text");
+
+    text.setAttribute("x", x);
+    text.setAttribute("y", y + 4);
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("class", "marker-count");
+    text.textContent = count;
+
+    markerGroup.appendChild(text);
+  }
+
+  svg.appendChild(markerGroup);
+}
+function drawMapMarkers(rows) {
+  const svg = document.getElementById("cityMarkers");
+  svg.innerHTML = "";
+
+  const cityCount = {};
+
+  rows.forEach(function(r) {
+    const cityName = (r.location || "").trim();
+
+    if (!cityName || !cityCoordinates[cityName]) return;
+
+    cityCount[cityName] = (cityCount[cityName] || 0) + 1;
+  });
+
+  Object.keys(cityCount).forEach(function(cityName) {
+    const coords = cityCoordinates[cityName];
+    const count = cityCount[cityName];
+
+    addMarker(
+      coords.x,
+      coords.y,
+      cityName,
+      count
+    );
+  });
+}
+
+function hideLogin() {
+  const loginScreen = document.getElementById("loginScreen");
+
+  if (!loginScreen) return;
+
+  loginScreen.classList.add("login-hidden");
+
+  setTimeout(function () {
+    loginScreen.style.display = "none";
+  }, 400);
+}
+
+/* ===========================
+   LOGIN TEMPORÁRIO
+=========================== */
+document.addEventListener("DOMContentLoaded", function () {
+  const loginScreen = document.getElementById("loginScreen");
+  const loginButton = document.getElementById("loginButton");
+  const emailInput = document.getElementById("loginEmail");
+  const passwordInput = document.getElementById("loginPassword");
+  const loginMessage = document.getElementById("loginMessage");
+  const togglePassword = document.getElementById("togglePassword");
+  const rememberLogin = document.getElementById("rememberLogin");
+
+  // Verifica se o usuário já entrou anteriormente
+  const savedPermanentLogin =
+  localStorage.getItem("onCallLoggedIn");
+
+const savedSessionLogin =
+  sessionStorage.getItem("onCallLoggedIn");
+
+if (
+  savedPermanentLogin === "true" ||
+  savedSessionLogin === "true"
+) {
+  hideLogin();
+}
+
+  // Mostrar ou esconder senha
+  togglePassword.addEventListener("click", function () {
+    const showingPassword = passwordInput.type === "text";
+
+    passwordInput.type = showingPassword ? "password" : "text";
+    togglePassword.textContent = showingPassword ? "👁" : "🙈";
+  });
+
+  // Login ao clicar no botão
+  loginButton.addEventListener("click", login);
+
+  // Login pressionando Enter
+  emailInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      login();
+    }
+  });
+
+  passwordInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      login();
+    }
+  });
+
+  async function login() {
+  const email = emailInput.value.trim().toLowerCase();
+  const password = passwordInput.value;
+
+  loginMessage.textContent = "";
+
+  if (!email || !password) {
+    loginMessage.textContent =
+      "Enter your email and password.";
+    return;
+  }
+
+  loginButton.disabled = true;
+  loginButton.textContent = "Signing in...";
+
+  try {
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data.user) {
+      throw new Error("User not found.");
+    }
+    displayLoggedUser(data.user);
+    hideLogin();
+
+  } catch (error) {
+    console.error("Login error:", error);
+
+    loginMessage.textContent =
+      error.message || "Invalid email or password.";
+
+    passwordInput.value = "";
+    passwordInput.focus();
+
+  } finally {
+    loginButton.disabled = false;
+    loginButton.textContent = "Sign In";
+  }
+}
+});
+
+async function restoreLoggedUser() {
+  try {
+    const {
+      data: { session },
+      error
+    } = await supabaseClient.auth.getSession();
+
+    if (error) {
+      console.error("Session error:", error);
+      return;
+    }
+
+    if (session?.user) {
+      displayLoggedUser(session.user);
+      hideLogin();
+    }
+  } catch (error) {
+    console.error(
+      "Unable to restore logged user:",
+      error
+    );
+  }
+}
+
+document.addEventListener(
+  "DOMContentLoaded",
+  restoreLoggedUser
+);
+
+const van = document.getElementById("ambulanceVan");
+
+let vanX = -120;
+let vanSpeed = 0.7;       // velocidade normal
+let targetSpeed = 0.7;
+
+function animateVan() {
+
+    // aceleração suave
+    vanSpeed += (targetSpeed - vanSpeed) * 0.05;
+
+    vanX += vanSpeed;
+
+    if (vanX > window.innerWidth + 120) {
+        vanX = -120;
+    }
+
+    van.style.left = vanX + "px";
+
+    requestAnimationFrame(animateVan);
+}
+
+requestAnimationFrame(animateVan);
+
+let vanSirenTimer = null;
+
+function toggleVanSiren() {
+  const van = document.getElementById("ambulanceVan");
+
+  if (!van) return;
+
+  clearTimeout(vanSirenTimer);
+
+  van.classList.add("siren-on");
+
+  targetSpeed = 8; // acelera quando clicar
+
+  vanSirenTimer = setTimeout(() => {
+    van.classList.remove("siren-on");
+
+    targetSpeed = 1.8; // volta para velocidade normal
+  }, 5000);
+}
+/* ===========================
+   SUPABASE AUTH
+=========================== */
+
+const SUPABASE_URL = "https://epeeuorteibsuthnliaq.supabase.co";
+
+const SUPABASE_PUBLIC_KEY =
+  "sb_publishable_Xc05a0rUDSYBNJvRcXiPOw_-GmoA3Uq";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLIC_KEY
+);
+
+document.addEventListener("DOMContentLoaded", function () {
+  const loginCard = document.getElementById("loginCard");
+  const registerCard = document.getElementById("registerCard");
+
+  const showRegisterButton =
+    document.getElementById("showRegisterButton");
+
+  const backToLoginButton =
+    document.getElementById("backToLoginButton");
+
+  const registerButton =
+    document.getElementById("registerButton");
+
+  const registerMessage =
+    document.getElementById("registerMessage");
+
+  showRegisterButton.addEventListener("click", function () {
+    loginCard.style.display = "none";
+    registerCard.style.display = "block";
+
+    registerMessage.textContent = "";
+    registerMessage.classList.remove("success");
+  });
+
+  backToLoginButton.addEventListener("click", function () {
+    registerCard.style.display = "none";
+    loginCard.style.display = "block";
+
+    registerMessage.textContent = "";
+    registerMessage.classList.remove("success");
+  });
+
+  registerButton.addEventListener("click", registerUser);
+
+  async function registerUser() {
+    const name = document
+      .getElementById("registerName")
+      .value.trim();
+
+    const email = document
+      .getElementById("registerEmail")
+      .value.trim()
+      .toLowerCase();
+
+    const password = document
+      .getElementById("registerPassword")
+      .value;
+
+    const confirmPassword = document
+      .getElementById("registerPasswordConfirm")
+      .value;
+
+    registerMessage.classList.remove("success");
+    registerMessage.textContent = "";
+
+    if (!name || !email || !password || !confirmPassword) {
+      registerMessage.textContent = "Complete all fields.";
+      return;
+    }
+
+    if (password.length < 6) {
+      registerMessage.textContent =
+        "Password must contain at least 6 characters.";
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      registerMessage.textContent = "Passwords do not match.";
+      return;
+    }
+
+    registerButton.disabled = true;
+    registerButton.textContent = "Creating account...";
+
+    try {
+      const { data, error } =
+        await supabaseClient.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              full_name: name
+            }
+          }
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      registerMessage.classList.add("success");
+
+      if (data.session) {
+        registerMessage.textContent =
+          "Account created successfully.";
+      } else {
+        registerMessage.textContent =
+          "Account created. Check your email to confirm it.";
+      }
+
+      document.getElementById("registerName").value = "";
+      document.getElementById("registerEmail").value = "";
+      document.getElementById("registerPassword").value = "";
+      document.getElementById("registerPasswordConfirm").value = "";
+
+      setTimeout(function () {
+        registerCard.style.display = "none";
+        loginCard.style.display = "block";
+
+        registerMessage.textContent = "";
+        registerMessage.classList.remove("success");
+      }, 2500);
+
+    } catch (error) {
+      console.error("Registration error:", error);
+
+      registerMessage.classList.remove("success");
+      registerMessage.textContent =
+        error.message || "Unable to create account.";
+
+    } finally {
+      registerButton.disabled = false;
+      registerButton.textContent = "Create Account";
+    }
+  }
+});
+
+// ===========================
+// ÚLTIMO CÓDIGO DO SCRIPT
+// ===========================
+
+const toggleHoursButton =
+  document.getElementById("toggleHoursButton");
+
+const totalHoursBox =
+  document.getElementById("totalHoursBox");
+
+let hoursAreHidden = false;
+
+toggleHoursButton.addEventListener("click", function () {
+
+  hoursAreHidden = !hoursAreHidden;
+
+  totalHoursBox.classList.toggle(
+    "hours-hidden",
+    hoursAreHidden
+  );
+
+  toggleHoursButton.textContent =
+    hoursAreHidden ? "🙈" : "👁";
+
+});
+
+function getGreetingByTime() {
+  const hour = new Date().getHours();
+
+  if (hour < 12) {
+    return "Good morning";
+  }
+
+  if (hour < 18) {
+    return "Good afternoon";
+  }
+
+  return "Good evening";
+}
+
+function getFirstName(fullName, email) {
+  if (fullName && fullName.trim()) {
+    return fullName.trim().split(/\s+/)[0];
+  }
+
+  if (email) {
+    const emailName = email.split("@")[0];
+
+    return emailName
+      .replace(/[._-]+/g, " ")
+      .trim()
+      .split(/\s+/)[0];
+  }
+
+  return "User";
+}
+
+function getInitials(fullName, email) {
+  const source =
+    fullName && fullName.trim()
+      ? fullName.trim()
+      : email
+        ? email.split("@")[0].replace(/[._-]+/g, " ")
+        : "User";
+
+  const parts = source
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return (
+    parts[0].charAt(0) +
+    parts[parts.length - 1].charAt(0)
+  ).toUpperCase();
+}
+
+function displayLoggedUser(user) {
+  if (!user) return;
+  currentUser = user;
+
+  const fullName =
+    user.user_metadata?.full_name || "";
+
+  const email = user.email || "";
+
+  const firstName =
+    getFirstName(fullName, email);
+
+  document.getElementById("userGreeting").textContent =
+    `${getGreetingByTime()}, ${firstName}`;
+
+  document.getElementById("userEmail").textContent =
+    email;
+
+  document.getElementById("userAvatar").textContent =
+    getInitials(fullName, email);
+
+  loadReportDashboard();
+  loadHistoryBox();
+  loadTotalHours();
+  loadReportsCenter();
+}
+async function logout() {
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) throw error;
+
+    currentUser = null;
+    currentReportDashboard = null;
+    selectedReportId = null;
+
+    // Remove os antigos controles de login
+    localStorage.removeItem("onCallLoggedIn");
+    sessionStorage.removeItem("onCallLoggedIn");
+
+    const loginScreen = document.getElementById("loginScreen");
+    const loginCard = document.getElementById("loginCard");
+    const registerCard = document.getElementById("registerCard");
+    const loginEmail = document.getElementById("loginEmail");
+    const loginPassword = document.getElementById("loginPassword");
+    const loginMessage = document.getElementById("loginMessage");
+
+    // Reexibe corretamente a tela de login
+    loginScreen.style.display = "flex";
+    loginScreen.classList.remove("login-hidden");
+
+    loginCard.style.display = "block";
+    registerCard.style.display = "none";
+
+    loginEmail.value = "";
+    loginPassword.value = "";
+    loginMessage.textContent = "";
+
+    loginEmail.focus();
+
+  } catch (error) {
+    console.error("Logout error:", error);
+    alert(error.message || "Unable to logout.");
+  }
+}
+// ======================================================
+// WEATHER SYSTEM
+// Coloque no final do <script>
+// ======================================================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  try {
+
+    // --------------------------------------------------
+    // ELEMENTOS DO CARD
+    // --------------------------------------------------
+
+    const weatherCard =
+      document.getElementById("weatherCard");
+
+    const weatherLocation =
+      document.getElementById("weatherLocation");
+
+    const weatherIcon =
+      document.getElementById("weatherIcon");
+
+    const weatherTemperature =
+      document.getElementById("weatherTemperature");
+
+    const weatherDescription =
+      document.getElementById("weatherDescription");
+
+    const weatherFeelsLike =
+      document.getElementById("weatherFeelsLike");
+
+    const weatherRain =
+      document.getElementById("weatherRain");
+
+    const weatherHumidity =
+      document.getElementById("weatherHumidity");
+
+    const weatherWind =
+      document.getElementById("weatherWind");
+
+    const weatherMessage =
+      document.getElementById("weatherMessage");
+
+    const weatherRefreshButton =
+      document.getElementById("weatherRefreshButton");
+
+
+    // Se o HTML do clima não estiver presente,
+    // o código para sem afetar o login.
+    if (!weatherCard) {
+      console.warn(
+        "Weather card not found. Weather system was not started."
+      );
+
+      return;
+    }
+
+
+    // --------------------------------------------------
+    // LOCALIZAÇÃO PADRÃO
+    // Usada quando o usuário bloqueia a localização
+    // --------------------------------------------------
+
+    const DEFAULT_LOCATION = {
+      latitude: 40.7684,
+      longitude: -74.1454,
+      label: "Kearny, New Jersey"
+    };
+
+
+    // --------------------------------------------------
+    // INFORMAÇÕES DOS CÓDIGOS DO CLIMA
+    // --------------------------------------------------
+
+    function getWeatherInformation(code) {
+
+      const weatherCodes = {
+
+        0: {
+          description: "Clear sky",
+          icon: "☀️"
+        },
+
+        1: {
+          description: "Mainly clear",
+          icon: "🌤️"
+        },
+
+        2: {
+          description: "Partly cloudy",
+          icon: "⛅"
+        },
+
+        3: {
+          description: "Cloudy",
+          icon: "☁️"
+        },
+
+        45: {
+          description: "Foggy",
+          icon: "🌫️"
+        },
+
+        48: {
+          description: "Freezing fog",
+          icon: "🌫️"
+        },
+
+        51: {
+          description: "Light drizzle",
+          icon: "🌦️"
+        },
+
+        53: {
+          description: "Drizzle",
+          icon: "🌦️"
+        },
+
+        55: {
+          description: "Heavy drizzle",
+          icon: "🌧️"
+        },
+
+        56: {
+          description: "Freezing drizzle",
+          icon: "🌧️"
+        },
+
+        57: {
+          description: "Heavy freezing drizzle",
+          icon: "🌧️"
+        },
+
+        61: {
+          description: "Light rain",
+          icon: "🌦️"
+        },
+
+        63: {
+          description: "Rain",
+          icon: "🌧️"
+        },
+
+        65: {
+          description: "Heavy rain",
+          icon: "🌧️"
+        },
+
+        66: {
+          description: "Freezing rain",
+          icon: "🌧️"
+        },
+
+        67: {
+          description: "Heavy freezing rain",
+          icon: "🌧️"
+        },
+
+        71: {
+          description: "Light snow",
+          icon: "🌨️"
+        },
+
+        73: {
+          description: "Snow",
+          icon: "❄️"
+        },
+
+        75: {
+          description: "Heavy snow",
+          icon: "❄️"
+        },
+
+        77: {
+          description: "Snow grains",
+          icon: "🌨️"
+        },
+
+        80: {
+          description: "Light rain showers",
+          icon: "🌦️"
+        },
+
+        81: {
+          description: "Rain showers",
+          icon: "🌧️"
+        },
+
+        82: {
+          description: "Heavy rain showers",
+          icon: "⛈️"
+        },
+
+        85: {
+          description: "Light snow showers",
+          icon: "🌨️"
+        },
+
+        86: {
+          description: "Heavy snow showers",
+          icon: "❄️"
+        },
+
+        95: {
+          description: "Thunderstorm",
+          icon: "⛈️"
+        },
+
+        96: {
+          description: "Thunderstorm with hail",
+          icon: "⛈️"
+        },
+
+        99: {
+          description: "Severe thunderstorm",
+          icon: "⛈️"
+        }
+      };
+
+
+      if (weatherCodes[code]) {
+        return weatherCodes[code];
+      }
+
+
+      return {
+        description: "Weather unavailable",
+        icon: "🌡️"
+      };
+    }
+
+
+    // --------------------------------------------------
+    // ARREDONDAR VALORES
+    // --------------------------------------------------
+
+    function roundWeatherValue(value) {
+
+      const number = Number(value);
+
+      if (!Number.isFinite(number)) {
+        return "--";
+      }
+
+      return Math.round(number);
+    }
+
+
+    // --------------------------------------------------
+    // ESTADO DE CARREGAMENTO
+    // --------------------------------------------------
+
+    function setWeatherLoading(isLoading) {
+
+      if (!weatherRefreshButton) {
+        return;
+      }
+
+      if (isLoading) {
+        weatherRefreshButton.classList.add("is-loading");
+        weatherRefreshButton.disabled = true;
+      } else {
+        weatherRefreshButton.classList.remove("is-loading");
+        weatherRefreshButton.disabled = false;
+      }
+
+      weatherRefreshButton.setAttribute(
+        "aria-busy",
+        String(isLoading)
+      );
+    }
+
+
+    // --------------------------------------------------
+    // MENSAGENS E ALERTAS
+    // --------------------------------------------------
+
+    function showWeatherMessage(message) {
+
+      if (!weatherMessage) {
+        return;
+      }
+
+      if (!message) {
+        weatherMessage.textContent = "";
+        weatherMessage.classList.remove("is-visible");
+
+        return;
+      }
+
+      weatherMessage.textContent = message;
+      weatherMessage.classList.add("is-visible");
+    }
+
+
+    // --------------------------------------------------
+    // LOCALIZAR PROBABILIDADE DE CHUVA ATUAL
+    // --------------------------------------------------
+
+    function getCurrentRainProbability(weatherData) {
+
+      if (
+        !weatherData ||
+        !weatherData.hourly ||
+        !weatherData.hourly.time ||
+        !weatherData.hourly.precipitation_probability
+      ) {
+        return null;
+      }
+
+      const times = weatherData.hourly.time;
+
+      const probabilities =
+        weatherData.hourly.precipitation_probability;
+
+      if (!times.length || !probabilities.length) {
+        return null;
+      }
+
+      const currentTime =
+        weatherData.current &&
+        weatherData.current.time
+          ? weatherData.current.time
+          : null;
+
+      if (!currentTime) {
+        return probabilities[0];
+      }
+
+      const exactIndex =
+        times.indexOf(currentTime);
+
+      if (exactIndex !== -1) {
+        return probabilities[exactIndex];
+      }
+
+      const currentTimestamp =
+        new Date(currentTime).getTime();
+
+      let nearestIndex = 0;
+      let smallestDifference = Infinity;
+
+
+      times.forEach(function (time, index) {
+
+        const timeTimestamp =
+          new Date(time).getTime();
+
+        const difference =
+          Math.abs(
+            timeTimestamp - currentTimestamp
+          );
+
+        if (difference < smallestDifference) {
+          smallestDifference = difference;
+          nearestIndex = index;
+        }
+
+      });
+
+
+      return probabilities[nearestIndex];
+    }
+
+
+    // --------------------------------------------------
+    // DEFINIR ALERTA CONFORME O CLIMA
+    // --------------------------------------------------
+
+    function showWeatherAlert(
+      weatherCode,
+      rainProbability,
+      fallbackMessage
+    ) {
+
+      if (
+        weatherCode >= 95 &&
+        weatherCode <= 99
+      ) {
+        showWeatherMessage(
+          "⛈️ Thunderstorm conditions. Drive carefully."
+        );
+
+        return;
+      }
+
+
+      if (
+        weatherCode >= 71 &&
+        weatherCode <= 86
+      ) {
+        showWeatherMessage(
+          "❄️ Snow conditions. Allow extra travel time."
+        );
+
+        return;
+      }
+
+
+      if (
+        rainProbability !== null &&
+        Number(rainProbability) >= 60
+      ) {
+        showWeatherMessage(
+          "🌧️ High chance of rain. Keep delivery equipment protected."
+        );
+
+        return;
+      }
+
+
+      if (fallbackMessage) {
+        showWeatherMessage(fallbackMessage);
+
+        return;
+      }
+
+
+      showWeatherMessage("");
+    }
+
+
+    // --------------------------------------------------
+    // CONSULTAR API DO CLIMA
+    // --------------------------------------------------
+// --------------------------------------------------
+// CONVERTER COORDENADAS EM CIDADE + ESTADO
+// --------------------------------------------------
+
+async function getLocationName(latitude, longitude) {
+
+  const url =
+    "https://api.bigdatacloud.net/data/reverse-geocode-client" +
+    "?latitude=" + encodeURIComponent(latitude) +
+    "&longitude=" + encodeURIComponent(longitude) +
+    "&localityLanguage=en";
+
+
+  try {
+
+    const response = await fetch(url);
+
+
+    if (!response.ok) {
+      throw new Error(
+        "Reverse geocoding failed: " +
+        response.status
+      );
+    }
+
+
+    const locationData =
+      await response.json();
+
+
+    const city =
+      locationData.city ||
+      locationData.locality ||
+      locationData.principalSubdivisionCode ||
+      "Current location";
+
+
+    let state =
+      locationData.principalSubdivision || "";
+
+
+    // Para New Jersey, transforma:
+    // "New Jersey" em "NJ"
+    const stateCode =
+      locationData.principalSubdivisionCode || "";
+
+
+    if (stateCode.includes("-")) {
+      state =
+        stateCode.split("-").pop();
+    }
+
+
+    if (
+      city &&
+      state &&
+      city.toLowerCase() !== state.toLowerCase()
+    ) {
+      return city + ", " + state;
+    }
+
+
+    return city || "Current location";
+
+
+  } catch (error) {
+
+    console.warn(
+      "Unable to get city name:",
+      error
+    );
+
+
+    return "Current location";
+
+  }
+}
+    async function fetchWeather(
+      latitude,
+      longitude,
+      locationLabel,
+      fallbackMessage
+    ) {
+
+      setWeatherLoading(true);
+      showWeatherMessage("");
+
+
+      if (weatherLocation) {
+        weatherLocation.textContent =
+          locationLabel || "Current location";
+      }
+
+
+      if (weatherDescription) {
+        weatherDescription.textContent =
+          "Updating weather...";
+      }
+
+
+      const parameters =
+        new URLSearchParams({
+
+          latitude: String(latitude),
+
+          longitude: String(longitude),
+
+          current: [
+            "temperature_2m",
+            "apparent_temperature",
+            "relative_humidity_2m",
+            "weather_code",
+            "wind_speed_10m"
+          ].join(","),
+
+          hourly:
+            "precipitation_probability",
+
+          temperature_unit:
+            "fahrenheit",
+
+          wind_speed_unit:
+            "mph",
+
+          precipitation_unit:
+            "inch",
+
+          timezone:
+            "auto",
+
+          forecast_days:
+            "1"
+        });
+
+
+      const weatherUrl =
+        "https://api.open-meteo.com/v1/forecast?" +
+        parameters.toString();
+
+
+      try {
+
+        const response =
+          await fetch(weatherUrl);
+
+
+        if (!response.ok) {
+          throw new Error(
+            "Weather request failed: " +
+            response.status
+          );
+        }
+
+
+        const weatherData =
+          await response.json();
+
+
+        if (
+          !weatherData ||
+          !weatherData.current
+        ) {
+          throw new Error(
+            "Current weather data was not returned."
+          );
+        }
+
+
+        const current =
+          weatherData.current;
+
+
+        const weatherInformation =
+          getWeatherInformation(
+            Number(current.weather_code)
+          );
+
+
+        const rainProbability =
+          getCurrentRainProbability(
+            weatherData
+          );
+
+
+        if (weatherIcon) {
+          weatherIcon.textContent =
+            weatherInformation.icon;
+        }
+
+
+        if (weatherTemperature) {
+          weatherTemperature.textContent =
+            roundWeatherValue(
+              current.temperature_2m
+            ) + "°F";
+        }
+
+
+        if (weatherDescription) {
+          weatherDescription.textContent =
+            weatherInformation.description;
+        }
+
+
+        if (weatherFeelsLike) {
+          weatherFeelsLike.textContent =
+            roundWeatherValue(
+              current.apparent_temperature
+            ) + "°F";
+        }
+
+
+        if (weatherHumidity) {
+          weatherHumidity.textContent =
+            roundWeatherValue(
+              current.relative_humidity_2m
+            ) + "%";
+        }
+
+
+        if (weatherWind) {
+          weatherWind.textContent =
+            roundWeatherValue(
+              current.wind_speed_10m
+            ) + " mph";
+        }
+
+
+        if (weatherRain) {
+
+          if (rainProbability === null) {
+            weatherRain.textContent = "--%";
+          } else {
+            weatherRain.textContent =
+              roundWeatherValue(
+                rainProbability
+              ) + "%";
+          }
+
+        }
+
+
+        showWeatherAlert(
+          Number(current.weather_code),
+          rainProbability,
+          fallbackMessage
+        );
+
+
+        try {
+
+          localStorage.setItem(
+            "lastWeatherLocation",
+            JSON.stringify({
+              latitude: latitude,
+              longitude: longitude,
+              label: locationLabel
+            })
+          );
+
+        } catch (storageError) {
+
+          console.warn(
+            "Unable to save weather location:",
+            storageError
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Weather error:",
+          error
+        );
+
+
+        if (weatherDescription) {
+          weatherDescription.textContent =
+            "Unable to load weather";
+        }
+
+
+        showWeatherMessage(
+          "Weather could not be updated. Press the refresh button to try again."
+        );
+
+      } finally {
+
+        setWeatherLoading(false);
+
+      }
+    }
+
+
+    // --------------------------------------------------
+    // USAR LOCALIZAÇÃO PADRÃO
+    // --------------------------------------------------
+
+    function loadDefaultWeather(message) {
+
+      fetchWeather(
+        DEFAULT_LOCATION.latitude,
+        DEFAULT_LOCATION.longitude,
+        DEFAULT_LOCATION.label,
+        message
+      );
+    }
+
+
+    // --------------------------------------------------
+    // SOLICITAR LOCALIZAÇÃO DO NAVEGADOR
+    // --------------------------------------------------
+
+    function requestWeatherLocation() {
+
+      if (weatherLocation) {
+        weatherLocation.textContent =
+          "Getting your location...";
+      }
+
+
+      if (weatherDescription) {
+        weatherDescription.textContent =
+          "Loading weather...";
+      }
+
+
+      if (!navigator.geolocation) {
+
+        loadDefaultWeather(
+          "📍 Location is unavailable. Showing Kearny weather."
+        );
+
+        return;
+      }
+
+
+      navigator.geolocation.getCurrentPosition(
+
+        async function (position) {
+
+  const latitude =
+    position.coords.latitude;
+
+  const longitude =
+    position.coords.longitude;
+
+
+  if (weatherLocation) {
+    weatherLocation.textContent =
+      "Finding your city...";
+  }
+
+
+  const locationName =
+    await getLocationName(
+      latitude,
+      longitude
+    );
+
+
+  fetchWeather(
+    latitude,
+    longitude,
+    locationName,
+    ""
+  );
+
+},
+
+
+        function (error) {
+
+          console.warn(
+            "Geolocation error:",
+            error
+          );
+
+
+          let locationMessage =
+            "📍 Location permission was not granted. Showing Kearny weather.";
+
+
+          if (error.code === 1) {
+            locationMessage =
+              "📍 Location permission was denied. Showing Kearny weather.";
+          }
+
+
+          if (error.code === 2) {
+            locationMessage =
+              "📍 Your location could not be determined. Showing Kearny weather.";
+          }
+
+
+          if (error.code === 3) {
+            locationMessage =
+              "📍 Location request timed out. Showing Kearny weather.";
+          }
+
+
+          loadDefaultWeather(
+            locationMessage
+          );
+
+        },
+
+
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 10 * 60 * 1000
+        }
+
+      );
+    }
+
+
+    // --------------------------------------------------
+    // BOTÃO PARA ATUALIZAR
+    // --------------------------------------------------
+
+    if (weatherRefreshButton) {
+
+      weatherRefreshButton.addEventListener(
+        "click",
+        function () {
+          requestWeatherLocation();
+        }
+      );
+
+    }
+
+
+    // --------------------------------------------------
+    // INICIAR O CLIMA
+    // --------------------------------------------------
+
+    requestWeatherLocation();
+
+
+  } catch (weatherSystemError) {
+
+    // Qualquer erro do clima fica isolado.
+    // O login e o restante do aplicativo continuam funcionando.
+
+    console.error(
+      "Weather system initialization error:",
+      weatherSystemError
+    );
+
+  }
+
+});
+
+    /* ONLOAD INITIALIZATION */
+    window.onload = function() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      document.getElementById("date").value = `${year}-${month}-${day}`;
+
+      loadCategories();
+      setEntryFormEnabled(false);
+      if (currentUser?.email) {
+        loadReportDashboard();
+        loadHistoryBox();
+        loadTotalHours();
+        loadReportsCenter();
+      }
+      addMarker(170,120,"Newark");
+addMarker(165,170,"Jersey City");
+addMarker(145,500,"Trenton");
+addMarker(185,310,"Princeton");
+    };
+
+  </script>
+</body>
+</html>
