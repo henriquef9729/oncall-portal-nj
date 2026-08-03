@@ -2667,10 +2667,14 @@ Delete Selected
       if (window.google?.script?.run) return;
 
       const apiMethods = new Set([
-        "getCitiesFromSheet",
-        "getDispatchers",
-        "loadEquipmentByCategory"
-      ]);
+  "getCitiesFromSheet",
+  "getDispatchers",
+  "loadEquipmentByCategory",
+  "getReportDashboard",
+  "loadRecentHistory",
+  "getTotalHours",
+  "getReportsOverview"
+]);
 
       const fallbackByMethod = {
         loadRecentHistory: [],
