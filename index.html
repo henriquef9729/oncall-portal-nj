@@ -5656,29 +5656,37 @@ async function getLocationName(latitude, longitude) {
 
 });
 
-    /* ONLOAD INITIALIZATION */
-    window.onload = function() {
-      const d = new Date();
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      document.getElementById("date").value = `${year}-${month}-${day}`;
+   /* ONLOAD INITIALIZATION */
+window.onload = function () {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
 
-      if (window.google?.script?.run) {
-  loadCategories();
-}
-      setEntryFormEnabled(false);
-      if (currentUser?.email && window.google?.script?.run) {
-  loadReportDashboard();
-  loadHistoryBox();
-  loadTotalHours();
-  loadReportsCenter();
-}
-      addMarker(170,120,"Newark");
-addMarker(165,170,"Jersey City");
-addMarker(145,500,"Trenton");
-addMarker(185,310,"Princeton");
-    };
+  document.getElementById("date").value =
+    `${year}-${month}-${day}`;
+
+  if (window.google?.script?.run) {
+    loadCategories();
+  }
+
+  setEntryFormEnabled(false);
+
+  if (
+    currentUser?.email &&
+    window.google?.script?.run
+  ) {
+    loadReportDashboard();
+    loadHistoryBox();
+    loadTotalHours();
+    loadReportsCenter();
+  }
+
+  addMarker(170, 120, "Newark", 1);
+  addMarker(165, 170, "Jersey City", 1);
+  addMarker(145, 500, "Trenton", 1);
+  addMarker(185, 310, "Princeton", 1);
+};
 
   </script>
 </body>
