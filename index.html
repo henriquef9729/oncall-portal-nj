@@ -2444,6 +2444,14 @@ preserveAspectRatio="xMidYMid meet">
         onclick="deleteSelected()">
 Delete Selected
 </button>
+
+<button id="editSelectedButton" class="btn-action" style="display:none;" onclick="editSelectedEntry()">
+✏️ Edit Selected
+</button>
+<button id="cancelEditingButton" class="btn-action" style="display:none;" onclick="cancelEditing()">
+Cancel Editing
+</button>
+
         </div>
       </div>
 
@@ -5817,3 +5825,16 @@ addMarker(185, 310, "Princeton", 1);
   </script>
 </body>
 </html>
+
+<script>
+function editSelectedEntry(){
+  alert("Edit mode will be connected after API.gs and Code.gs are updated.");
+}
+function cancelEditing(){
+  editingEntry = null;
+  const btn=document.getElementById("saveEntryButton");
+  if(btn) btn.textContent="Save Entry";
+  const c=document.getElementById("cancelEditingButton");
+  if(c) c.style.display="none";
+}
+</script>
